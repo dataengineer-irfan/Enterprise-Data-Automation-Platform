@@ -977,14 +977,14 @@ function SchemaExplorer({ t, selected, setSelected, query, setQuery, apiBase, ap
   const [liveLoading, setLiveLoading] = useState(false);
 
   useEffect(() => {
-    if (!live) { setLiveNames(null); return; }
+    if (!live || !apiToken) { setLiveNames(null); return; }
     let cancelled = false;
     apiGet(apiBase, "/api/schema/tables", apiToken).then((d) => { if (!cancelled) setLiveNames(d.tables.map((x) => x.name).sort()); }).catch(() => { if (!cancelled) setLiveNames(null); });
     return () => { cancelled = true; };
   }, [live, apiBase, apiToken]);
 
   useEffect(() => {
-    if (!live) { setLiveDetail(null); return; }
+    if (!live || !apiToken) { setLiveDetail(null); return; }
     let cancelled = false;
     setLiveLoading(true);
     apiGet(apiBase, `/api/schema/tables/${selected}`, apiToken)
@@ -1527,7 +1527,8 @@ function HomeScreen({ t, apiBase, apiStatus, apiToken, setScreen, setSelectedTab
           <div className="qs-step todo"><div className="qs-num">8</div><div className="qs-lbl">Reports</div></div>
         </div>
       </div>
-    </S>
+    </S>
+
   );
 }
 
@@ -1540,7 +1541,7 @@ function JobMonitor({ t, apiBase, apiStatus, apiToken }) {
   const [jobs, setJobs] = useState(null);
 
   useEffect(() => {
-    if (!live) return;
+    if (!live || !apiToken) return;
     let cancelled = false;
     const load = () => apiGet(apiBase, "/api/jobs", apiToken)
       .then((d) => { if (!cancelled) setJobs(d.jobs); })
@@ -1560,8 +1561,6 @@ function JobMonitor({ t, apiBase, apiStatus, apiToken }) {
         description="Track live data generation, schema discovery, referential integrity validation, and masking tasks"
         breadcrumbs="PLATFORM / JOBS"
       />
-
-      <div className="col-span-12">
         <ECard title="Execution Queue" subtitle={`${items.length} total tasks registered`}>
           <ETable
             headers={["JOB ID", "NAME", "STATUS", "WORKER / AGENT", "DURATION", "PROGRESS"]}
@@ -1586,7 +1585,6 @@ function JobMonitor({ t, apiBase, apiStatus, apiToken }) {
             ))}
           />
         </ECard>
-      </div>
     </S>
   );
 }
@@ -1623,7 +1621,7 @@ function LineageGraphScreen({ t, apiBase, apiStatus, apiToken, selectedTable, se
         .catch(() => { if (!cancelled) setFlowPackage(null); });
     }
 
-    if (!live) {
+    if (!live || !apiToken) {
       setDetail(SCHEMA[tableName]);
       setError(null);
       return () => { cancelled = true; };
@@ -1731,8 +1729,7 @@ function LineageGraphScreen({ t, apiBase, apiStatus, apiToken, selectedTable, se
         breadcrumbs="PLATFORM / LINEAGE"
       />
 
-      <div className="col-span-12">
-        <ECard title={`Visual Lineage · ${tableName}`} subtitle="Interactive dependency graph">
+      <ECard title={`Visual Lineage · ${tableName}`} subtitle="Interactive dependency graph">
           <div
             style={{ width: "100%", height: "420px", background: "var(--surface-inset)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-default)", position: "relative", overflow: "hidden" }}
             onPointerMove={handlePointerMove}
@@ -1816,8 +1813,7 @@ function LineageGraphScreen({ t, apiBase, apiStatus, apiToken, selectedTable, se
             <span>{hoveredNode ? `Hovered: ${hoveredNode}` : "Hover a node to preview its lineage."}</span>
             <span style={{ marginLeft: "auto" }}>Hover or click nodes to focus a different table</span>
           </div>
-        </ECard>
-      </div>
+      </ECard>
     </S>
   );
 }
@@ -1837,14 +1833,14 @@ function MaskingDesigner({ t, selected, setSelected, apiBase, apiStatus, apiToke
   const [liveError, setLiveError] = useState(null);
 
   useEffect(() => {
-    if (!live) { setLiveTables(null); return; }
+    if (!live || !apiToken) { setLiveTables(null); return; }
     let cancelled = false;
     apiGet(apiBase, "/api/masking/tables", apiToken).then((d) => { if (!cancelled) setLiveTables(d.tables); }).catch(() => { if (!cancelled) setLiveTables(null); });
     return () => { cancelled = true; };
   }, [live, apiBase, apiToken]);
 
   const refreshLivePreview = useCallback(() => {
-    if (!live) return;
+    if (!live || !apiToken) return;
     setLiveBusy(true);
     setLiveError(null);
     apiGet(apiBase, `/api/masking/${selected}/preview`, apiToken)
@@ -1854,7 +1850,7 @@ function MaskingDesigner({ t, selected, setSelected, apiBase, apiStatus, apiToke
   }, [live, apiBase, selected, apiToken]);
 
   useEffect(() => {
-    if (!live) { setLiveRules(null); setLivePreview(null); return; }
+    if (!live || !apiToken) { setLiveRules(null); setLivePreview(null); return; }
     let cancelled = false;
     setLiveBusy(true);
     setLiveError(null);
@@ -1954,7 +1950,7 @@ function OpsOverview({ t, apiBase, apiStatus, apiToken }) {
   const [healthData, setHealthData] = useState(null);
 
   useEffect(() => {
-    if (!live) return;
+    if (!live || !apiToken) return;
     let cancelled = false;
     apiGet(apiBase, "/api/health", null, 3000).then((d) => {
       if (!cancelled) setHealthData(d);
@@ -2384,7 +2380,7 @@ function InsightsGroup({ apiBase, apiToken, apiStatus }) {
   const [auditLogs, setAuditLogs] = useState(null);
 
   useEffect(() => {
-    if (!live) return;
+    if (!live || !apiToken) return;
     let cancelled = false;
     apiGet(apiBase, "/api/health", null, 2000)
       .then((d) => { if (!cancelled) setHealth(d); }).catch(() => {});
@@ -2661,6 +2657,21 @@ export default function EnterpriseConsole() {
     --shadow-hover:0 6px 20px rgba(20,20,25,0.08), 0 2px 6px rgba(20,20,25,0.05);
     --track:#e9e9ee;
     font-family:-apple-system,"Segoe UI","Inter",Helvetica,Arial,sans-serif;
+    /* alias tokens used in older screen components */
+    --surface-inset:var(--bg-inset);
+    --surface-bg:var(--bg);
+    --border-default:var(--border);
+    --border-strong:var(--border);
+    --accent-primary:var(--accent);
+    --accent-hover:var(--accent-hover);
+    --text-primary:var(--text);
+    --text-secondary:var(--text-muted);
+    --text-tertiary:var(--text-faint);
+    --danger-color:var(--red);
+    --agent-tint:var(--violet-tint);
+    --agent-color:var(--violet);
+    --radius-md:var(--radius);
+    --font-mono:monospace;
   }
   html[data-theme="dark"]{
     --bg:#16181b; --bg-sidebar:#1a1c1f; --bg-canvas:#101113; --bg-inset:#1f2124;
@@ -3028,11 +3039,14 @@ export default function EnterpriseConsole() {
                 <svg className="qa-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6-6"/></svg>
               </button>
               <div className="qa-panel">
-                <div className="qa-item" onClick={() => setScreen("schema")}>Connect Source</div>
-                <div className="qa-item" onClick={() => setScreen("connections")}>Connect Target</div>
-                <div className="qa-item" onClick={() => setScreen("schema")}>Discover Metadata</div>
-                <div className="qa-item" onClick={() => setScreen("home")}>Create Workspace</div>
-                <div className="qa-item" onClick={() => setScreen("jobs")}>Resume Last Session</div>
+                <div className="qa-item" onClick={() => { setScreen("connections"); setQaOpen(false); }}>Connect Source Database</div>
+                <div className="qa-item" onClick={() => { setScreen("connections"); setQaOpen(false); }}>Connect Target Database</div>
+                <div className="qa-item" onClick={() => { setScreen("schema"); setQaOpen(false); }}>Discover Metadata</div>
+                <div className="qa-item" onClick={() => { setScreen("conversion"); setQaOpen(false); }}>Run Masking Policy</div>
+                <div className="qa-item" onClick={() => { setScreen("lineage"); setQaOpen(false); }}>View Lineage Graph</div>
+                <div className="qa-item" onClick={() => { setScreen("sql"); setQaOpen(false); }}>Open SQL Editor</div>
+                <div className="qa-item" onClick={() => { setScreen("jobs"); setQaOpen(false); }}>Monitor Jobs</div>
+                <div className="qa-item" onClick={() => { setScreen("agent"); setQaOpen(false); }}>AI Agent Console</div>
               </div>
             </div>
 
