@@ -783,7 +783,7 @@ function useTokens(theme) {
    ========================================================================= */
 function S({ children, pad = true, style = {} }) {
   return (
-    <div style={{ flex: 1, width: "100%", overflowY: "auto", background: "var(--bg-canvas)", color: "var(--text)", padding: pad ? "20px 24px 48px" : 0, boxSizing: "border-box", ...style }}>
+    <div style={{ flex: 1, width: "100%", height: "100%", overflowY: "auto", background: "var(--bg-canvas)", color: "var(--text)", padding: pad ? "20px 24px 48px" : 0, boxSizing: "border-box", ...style }}>
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "16px" }}>
         {children}
       </div>
@@ -792,17 +792,8 @@ function S({ children, pad = true, style = {} }) {
 }
 
 function PageShell({ layout = "A", children }) {
-  return (
-    <S pad={true}>
-      {layout === "B" ? (
-        <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "16px", alignItems: "start" }}>
-          {children}
-        </div>
-      ) : (
-        children
-      )}
-    </S>
-  );
+  // Unified: layout param no longer changes the container - all screens use S
+  return <S pad={true}>{children}</S>;
 }
 
 function ECard({ title, subtitle, actions, children, style = {} }) {
@@ -1487,7 +1478,7 @@ function HomeScreen({ t, apiBase, apiStatus, apiToken, setScreen, setSelectedTab
   const [error, setError] = useState(null);
 
   return (
-    <div className="canvas-inner">
+    <S pad={true}>
       {/* 1. HERO — title only, clean and quiet */}
       <div className="hero">
         <div className="hero-badge">
@@ -1536,7 +1527,7 @@ function HomeScreen({ t, apiBase, apiStatus, apiToken, setScreen, setSelectedTab
           <div className="qs-step todo"><div className="qs-num">8</div><div className="qs-lbl">Reports</div></div>
         </div>
       </div>
-    </div>
+    </S>
   );
 }
 
@@ -1562,7 +1553,7 @@ function JobMonitor({ t, apiBase, apiStatus, apiToken }) {
   const items = live ? (jobs || []) : MOCK_JOBS;
 
   return (
-    <PageShell layout="A">
+    <S pad={true}>
       <PageHeader
         icon={ListChecks}
         title="Jobs & Task Execution Monitor"
@@ -1596,7 +1587,7 @@ function JobMonitor({ t, apiBase, apiStatus, apiToken }) {
           />
         </ECard>
       </div>
-    </PageShell>
+    </S>
   );
 }
 
@@ -1732,7 +1723,7 @@ function LineageGraphScreen({ t, apiBase, apiStatus, apiToken, selectedTable, se
   };
 
   return (
-    <PageShell layout="A">
+    <S pad={true}>
       <PageHeader
         icon={GitBranch}
         title="Lineage & Relationship Graph"
@@ -1827,7 +1818,7 @@ function LineageGraphScreen({ t, apiBase, apiStatus, apiToken, selectedTable, se
           </div>
         </ECard>
       </div>
-    </PageShell>
+    </S>
   );
 }
 
@@ -1904,7 +1895,7 @@ function MaskingDesigner({ t, selected, setSelected, apiBase, apiStatus, apiToke
   const tableList = live ? (liveTables || []).map((x) => x.table) : ALL_TABLE_NAMES.filter((n) => SCHEMA[n].columns.some((c) => c.sensitive));
 
   return (
-    <PageShell layout="B">
+    <S pad={true}>
       <PageHeader
         icon={ShieldCheck}
         title={`Conversion & Masking Policy · ${selected}`}
@@ -1953,7 +1944,7 @@ function MaskingDesigner({ t, selected, setSelected, apiBase, apiStatus, apiToke
           ))}
         />
       </ECard>
-    </PageShell>
+    </S>
   );
 }
 
@@ -2094,7 +2085,7 @@ function SqlEditorScreen({ t, apiBase, apiStatus, apiToken, selectedTable, setSe
   }, [live, apiBase, apiToken, selectedTable, operation]);
 
   return (
-    <PageShell layout="B">
+    <S pad={true}>
       <PageHeader
         icon={Terminal}
         title="Interactive SQL Studio & Generator"
@@ -2188,7 +2179,7 @@ function SqlEditorScreen({ t, apiBase, apiStatus, apiToken, selectedTable, setSe
           </ECard>
         )}
       </div>
-    </PageShell>
+    </S>
   );
 }
 
@@ -2238,7 +2229,7 @@ function DBAConsole({ t, apiBase, apiStatus, apiToken, myRole }) {
 
 function AgentConsole({ t, feedActivity, apiBase, apiStatus, apiToken, myRole }) {
   return (
-    <PageShell layout="B">
+    <S pad={true}>
       <PageHeader
         icon={Bot}
         title="Subagent Orchestration & AI Console"
@@ -2271,7 +2262,7 @@ function AgentConsole({ t, feedActivity, apiBase, apiStatus, apiToken, myRole })
           </div>
         </div>
       </ECard>
-    </PageShell>
+    </S>
   );
 }
 
@@ -2869,7 +2860,7 @@ export default function EnterpriseConsole() {
   .user-chip .r{font-size:10px;color:var(--text-faint);}
 
   /* CANVAS — Header → Platform Capabilities → Quick Start, centered, minimal scroll */
-  .canvas{flex:1;overflow-y:auto;background:var(--bg-canvas);color:var(--text);}
+  .canvas{flex:1;overflow:hidden;background:var(--bg-canvas);color:var(--text);display:flex;flex-direction:column;}
   .canvas-inner{width:100%;padding:20px 24px 48px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box;}
 
   .section-head{margin-bottom:12px;}
