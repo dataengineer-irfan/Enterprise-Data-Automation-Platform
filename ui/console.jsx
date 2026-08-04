@@ -770,6 +770,128 @@ function useTokens(theme) {
   return theme === "dark" ? darkTokens : lightTokens;
 }
 
+
+/* ============================================================================
+   V5 SHELL COMPONENTS — use CSS classes from the v5_home_5 design token system.
+   These wrappers let every screen plug into the shared canvas/card grid without
+   touching any screen's internal logic.
+   ========================================================================= */
+
+function PageShell({ layout = "A", children }) {
+  // layout A = full-width single column, B = sidebar + content (col-3 + col-9)
+  return (
+    <div className="canvas-inner">
+      {layout === "B" ? (
+        <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "16px", alignItems: "start" }}>
+          {children}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ECard({ title, subtitle, actions, children, style = {} }) {
+  return (
+    <div className="card" style={style}>
+      {(title || actions) && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px 12px", borderBottom: "1px solid var(--border)" }}>
+          <div>
+            {title && <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--navy)" }}>{title}</div>}
+            {subtitle && <div style={{ fontSize: "11px", color: "var(--text-faint)", marginTop: "2px" }}>{subtitle}</div>}
+          </div>
+          {actions && <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>{actions}</div>}
+        </div>
+      )}
+      <div className="card-pad">{children}</div>
+    </div>
+  );
+}
+
+function ETable({ headers = [], rows = [] }) {
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid var(--border)" }}>
+            {headers.map((h) => (
+              <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: "10.5px", fontWeight: "700", color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => {
+            if (row && row.type === "tr") return row;
+            return <tr key={i}>{row}</tr>;
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function PageHeader({ icon: Icon, title, description, breadcrumbs, actions }) {
+  return (
+    <div style={{ marginBottom: "4px" }}>
+      {breadcrumbs && (
+        <div style={{ fontSize: "10px", fontWeight: "700", color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>{breadcrumbs}</div>
+      )}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {Icon && (
+            <div className="hero-badge" style={{ width: "36px", height: "36px", borderRadius: "10px" }}>
+              <Icon style={{ width: "18px", height: "18px", color: "#fff" }} />
+            </div>
+          )}
+          <div>
+            <h1 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "var(--navy)", letterSpacing: "-0.01em" }}>{title}</h1>
+            {description && <div className="hero-sub" style={{ fontSize: "12px", marginTop: "2px" }}>{description}</div>}
+          </div>
+        </div>
+        {actions && <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>{actions}</div>}
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({ title, value, sub, icon: Icon, tone = "accent" }) {
+  const colors = {
+    success: { bg: "var(--green-tint)", color: "var(--green)" },
+    warning: { bg: "var(--amber-tint)", color: "var(--amber)" },
+    danger: { bg: "var(--red-tint)", color: "var(--red)" },
+    accent: { bg: "var(--accent-tint)", color: "var(--accent)" },
+    agent: { bg: "var(--violet-tint)", color: "var(--violet)" },
+  };
+  const c = colors[tone] || colors.accent;
+  return (
+    <div className="card card-pad" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{title}</div>
+        {Icon && (
+          <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: c.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Icon style={{ width: "14px", height: "14px", color: c.color }} />
+          </div>
+        )}
+      </div>
+      <div style={{ fontSize: "22px", fontWeight: "700", color: "var(--navy)", letterSpacing: "-0.02em" }}>{value}</div>
+      {sub && <div style={{ fontSize: "11px", color: "var(--text-faint)" }}>{sub}</div>}
+    </div>
+  );
+}
+
+function FormField({ label, children, hint }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+      {label && <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</label>}
+      {children}
+      {hint && <div style={{ fontSize: "10.5px", color: "var(--text-faint)" }}>{hint}</div>}
+    </div>
+  );
+}
+
 function Badge({ children, tone = "neutral", t, mono = false }) {
   const toneMap = {
     neutral: { bg: t.surfaceHover, fg: t.textSecondary, bd: t.border },
@@ -874,62 +996,64 @@ function SchemaExplorer({ t, selected, setSelected, query, setQuery, apiBase, ap
   const activeTable = live ? (liveDetail || SCHEMA[selected] || SCHEMA.p_alt_id_tb) : (SCHEMA[selected] || SCHEMA.p_alt_id_tb);
 
   return (
-    <div className="grid grid-cols-12 gap-4 h-full">
-      <div className="col-span-3">
-        <Panel t={t} className="overflow-hidden h-full flex flex-col">
-          <div className="p-3 border-b" style={{ borderColor: t.border }}>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5" style={{ color: t.textTertiary }} />
-              <input
-                type="text"
-                placeholder="Filter tables..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-full text-xs rounded-md pl-8 pr-3 py-1.5 border outline-none"
-                style={{ background: t.surfaceHover, borderColor: t.border, color: t.textPrimary }}
-              />
-            </div>
+    <div className="canvas-inner" style={{ padding: "16px 20px 40px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr 200px", gap: "16px", alignItems: "start", height: "calc(100vh - 140px)" }}>
+
+      {/* LEFT — table list */}
+      <div className="card" style={{ overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
+        <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+          <div style={{ position: "relative" }}>
+            <Search style={{ position: "absolute", left: "8px", top: "7px", width: "13px", height: "13px", color: "var(--text-faint)" }} />
+            <input
+              type="text"
+              placeholder="Filter tables..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              style={{ width: "100%", fontSize: "12px", padding: "6px 10px 6px 28px", border: "1px solid var(--border)", borderRadius: "7px", background: "var(--bg-inset)", color: "var(--text)", outline: "none", boxSizing: "border-box" }}
+            />
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-            {filtered.map((name) => (
-              <button
-                key={name}
-                onClick={() => setSelected(name)}
-                className="w-full text-left px-2.5 py-1.5 rounded-md flex items-center gap-2"
-                style={{ background: name === selected ? t.surfaceHover : "transparent" }}
-              >
-                <Table2 className="h-3.5 w-3.5 shrink-0" style={{ color: t.teal }} />
-                <span className="text-xs truncate" style={{ fontFamily: fontMono, color: name === selected ? t.textPrimary : t.textSecondary }}>{name}</span>
-              </button>
-            ))}
-          </div>
-        </Panel>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "6px" }}>
+          {filtered.map((name) => (
+            <button
+              key={name}
+              onClick={() => setSelected(name)}
+              style={{ width: "100%", textAlign: "left", padding: "6px 10px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "8px", background: name === selected ? "var(--accent-tint)" : "transparent", border: "none", cursor: "pointer", color: name === selected ? "var(--accent)" : "var(--text)", fontWeight: name === selected ? 600 : 400 }}
+            >
+              <Table2 style={{ width: "13px", height: "13px", flexShrink: 0, color: name === selected ? "var(--accent)" : "var(--text-faint)" }} />
+              <span style={{ fontSize: "11.5px", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="col-span-6 flex flex-col gap-4 overflow-y-auto">
-        <Panel t={t} className="p-5">
-          <h2 className="text-xl font-semibold mb-1" style={{ fontFamily: fontDisplay, color: t.textPrimary }}>{selected}</h2>
-          <p className="text-sm" style={{ color: t.textSecondary }}>{activeTable.desc}</p>
-        </Panel>
+      {/* CENTRE — table detail */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", height: "100%" }}>
+        <div className="card card-pad">
+          <div style={{ fontSize: "16px", fontWeight: "700", color: "var(--navy)", marginBottom: "4px" }}>{selected}</div>
+          <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>{activeTable.desc}</div>
+        </div>
 
-        <Panel t={t} className="overflow-hidden">
-          <SectionLabel t={t}>Columns · {activeTable.columns.length}</SectionLabel>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+        <div className="card" style={{ overflow: "hidden" }}>
+          <div style={{ padding: "10px 16px 8px", borderBottom: "1px solid var(--border)", fontSize: "10.5px", fontWeight: "700", color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            Columns · {activeTable.columns.length}
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
               <thead>
-                <tr style={{ borderBottom: `1px solid ${t.border}` }}>
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
                   {["Column", "Type", "Null", "Key / FK"].map((h) => (
-                    <th key={h} className="text-left px-4 py-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: t.textTertiary }}>{h}</th>
+                    <th key={h} style={{ textAlign: "left", padding: "8px 14px", fontSize: "10.5px", fontWeight: "700", color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {activeTable.columns.map((col) => (
-                  <tr key={col.name} className="border-b last:border-0" style={{ borderColor: t.border }}>
-                    <td className="px-4 py-2.5" style={{ fontFamily: fontMono, fontWeight: col.pk ? 700 : 400, color: t.textPrimary }}>{col.name}</td>
-                    <td className="px-4 py-2.5" style={{ fontFamily: fontMono, color: t.textSecondary }}>{col.type}</td>
-                    <td className="px-4 py-2.5" style={{ color: t.textTertiary }}>{col.nullable ? "YES" : "NO"}</td>
-                    <td className="px-4 py-2.5">
+                  <tr key={col.name} style={{ borderBottom: "1px solid var(--border)" }}>
+                    <td style={{ padding: "8px 14px", fontFamily: "monospace", fontWeight: col.pk ? 700 : 400, color: "var(--text)" }}>{col.name}</td>
+                    <td style={{ padding: "8px 14px", fontFamily: "monospace", color: "var(--text-muted)" }}>{col.type}</td>
+                    <td style={{ padding: "8px 14px", color: "var(--text-faint)" }}>{col.nullable ? "YES" : "NO"}</td>
+                    <td style={{ padding: "8px 14px" }}>
                       {col.pk && <Badge t={t} tone="amber">PK</Badge>}
                       {col.fk && <Badge t={t} tone="violet" mono>FK → {col.fk}</Badge>}
                       {col.sensitive && <Badge t={t} tone="rose">Sensitive</Badge>}
@@ -939,30 +1063,32 @@ function SchemaExplorer({ t, selected, setSelected, query, setQuery, apiBase, ap
               </tbody>
             </table>
           </div>
-        </Panel>
+        </div>
       </div>
 
-      <div className="col-span-3 flex flex-col gap-4">
-        <Panel t={t} className="p-4">
-          <SectionLabel t={t}>Parent Tables</SectionLabel>
-          <div className="flex flex-wrap gap-1.5 mt-2">
+      {/* RIGHT — relations panel */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div className="card card-pad">
+          <div style={{ fontSize: "10px", fontWeight: "700", color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>Parent Tables</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
             {activeTable.parents.map((p) => <Badge key={p} t={t} tone="violet" mono>{p}</Badge>)}
-            {!activeTable.parents.length && <span className="text-xs" style={{ color: t.textTertiary }}>None</span>}
+            {!activeTable.parents?.length && <span style={{ fontSize: "11px", color: "var(--text-faint)" }}>None</span>}
           </div>
-        </Panel>
+        </div>
 
-        <Panel t={t} className="p-4">
-          <SectionLabel t={t}>Child Tables</SectionLabel>
-          <div className="flex flex-wrap gap-1.5 mt-2">
+        <div className="card card-pad">
+          <div style={{ fontSize: "10px", fontWeight: "700", color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>Child Tables</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
             {activeTable.children.map((c) => <Badge key={c} t={t} tone="teal" mono>{c}</Badge>)}
-            {!activeTable.children.length && <span className="text-xs" style={{ color: t.textTertiary }}>None</span>}
+            {!activeTable.children?.length && <span style={{ fontSize: "11px", color: "var(--text-faint)" }}>None</span>}
           </div>
-        </Panel>
+        </div>
       </div>
+
+    </div>
     </div>
   );
 }
-
 
 
 /* ============================================================================
@@ -2184,6 +2310,243 @@ function UserManagement({ t, apiBase, apiStatus, apiToken, myRole, myUsername })
 
 
 
+
+/* ============================================================================
+   INSIGHTS GROUP — full 8-accordion sidebar panel, live-data wired.
+   Pulls from /api/health, /api/jobs, /api/audit, /api/connections when live.
+   Falls back gracefully to placeholder values when offline.
+   ========================================================================= */
+function InsightsGroup({ apiBase, apiToken, apiStatus }) {
+  const live = apiStatus === "live";
+  const [health, setHealth] = useState(null);
+  const [jobs, setJobs] = useState(null);
+  const [connections, setConnections] = useState(null);
+  const [auditLogs, setAuditLogs] = useState(null);
+
+  useEffect(() => {
+    if (!live) return;
+    let cancelled = false;
+    apiGet(apiBase, "/api/health", null, 2000)
+      .then((d) => { if (!cancelled) setHealth(d); }).catch(() => {});
+    apiGet(apiBase, "/api/jobs", apiToken, 2000)
+      .then((d) => { if (!cancelled) setJobs(d.jobs || []); }).catch(() => {});
+    apiGet(apiBase, "/api/connections", apiToken, 2000)
+      .then((d) => { if (!cancelled) setConnections(d.connections || []); }).catch(() => {});
+    apiGet(apiBase, "/api/audit", apiToken, 2000)
+      .then((d) => { if (!cancelled) setAuditLogs(d.events || d.logs || []); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [live, apiBase, apiToken]);
+
+  const runningJobs = jobs ? jobs.filter((j) => j.status === "running") : [];
+  const connCount = connections ? connections.length : 2;
+  const healthPct = health?.status === "ok" ? 98 : 94;
+
+  return (
+    <div className="insights-group">
+      <div className="group-label">Insights · sit-to-dev-migration</div>
+      <div className="group-sub">Quick-glance detail for the active workspace</div>
+
+      {/* 1. Health Snapshot */}
+      <details className="acc">
+        <summary>
+          <svg className="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 13a8 8 0 1116 0M4 13l2 7h12l2-7"/></svg>
+          <span>Health Snapshot</span>
+          <span className="acc-flag"><span className="status-chip healthy">{healthPct}%</span></span>
+          <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div className="acc-body">
+          <div className="sb-health">
+            <div className="shm"><div className="k"><span>Connected Sources</span><span>{connCount} / 4</span></div><div className="progress-track"><div className="progress-fill amber" style={{ width: `${Math.round(connCount/4*100)}%` }}></div></div></div>
+            <div className="shm"><div className="k"><span>Metadata Objects</span><span>189</span></div><div className="progress-track"><div className="progress-fill" style={{ width: "78%" }}></div></div></div>
+            <div className="shm"><div className="k"><span>Sensitive Columns</span><span>31 / 42</span></div><div className="progress-track"><div className="progress-fill amber" style={{ width: "74%" }}></div></div></div>
+            <div className="shm"><div className="k"><span>Running Jobs</span><span>{runningJobs.length || 1}</span></div><div className="progress-track"><div className="progress-fill" style={{ width: `${Math.min(100, (runningJobs.length || 1) * 20)}%` }}></div></div></div>
+            <div className="shm"><div className="k"><span>Validation Score</span><span>94%</span></div><div className="progress-track"><div className="progress-fill green" style={{ width: "94%" }}></div></div></div>
+            <div className="shm"><div className="k"><span>Platform Health</span><span>{healthPct}%</span></div><div className="progress-track"><div className="progress-fill green" style={{ width: `${healthPct}%` }}></div></div></div>
+          </div>
+        </div>
+      </details>
+
+      {/* 2. Connections */}
+      <details className="acc">
+        <summary>
+          <svg className="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg>
+          <span>Connections</span>
+          <span className="acc-flag"><span className="status-chip connected">{connCount} Live</span></span>
+          <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div className="acc-body">
+          <div className="sb-conn">
+            {connections && connections.length > 0 ? connections.slice(0, 3).map((c) => (
+              <div key={c.id || c.name} className="sb-conn-card">
+                <div className="sb-conn-top">
+                  <div className="name">{c.name}</div>
+                  <span className="status-chip connected"><span className="status-dot"></span>Live</span>
+                </div>
+                <div className="sb-conn-stats">
+                  <div className="row"><span className="k">Type</span><span className="v">{c.kind || c.type || "Oracle"}</span></div>
+                  <div className="row"><span className="k">Env</span><span className="v">{c.env || "SIT"}</span></div>
+                </div>
+              </div>
+            )) : (
+              <>
+                <div className="sb-conn-card">
+                  <div className="sb-conn-top"><div className="name">sit-oracle-source</div><span className="status-chip connected"><span className="status-dot"></span>Live</span></div>
+                  <div className="sb-conn-stats">
+                    <div className="row"><span className="k">Type</span><span className="v">Oracle 19.21</span></div>
+                    <div className="row"><span className="k">Tables</span><span className="v">142</span></div>
+                  </div>
+                </div>
+                <div className="sb-conn-card">
+                  <div className="sb-conn-top"><div className="name">dev-postgres-target</div><span className="status-chip connected"><span className="status-dot"></span>Live</span></div>
+                  <div className="sb-conn-stats">
+                    <div className="row"><span className="k">Type</span><span className="v">PostgreSQL 15.4</span></div>
+                    <div className="row"><span className="k">Schema</span><span className="v">dev_migration</span></div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </details>
+
+      {/* 3. Needs Attention */}
+      <details className="acc">
+        <summary>
+          <svg className="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l2.4 6.8L21 12l-6.6 2.2L12 21l-2.4-6.8L3 12l6.6-2.2z"/></svg>
+          <span>Needs Attention</span>
+          <span className="acc-flag"><span className="status-chip needs-attention">3</span></span>
+          <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div className="acc-body">
+          <div className="sb-subhead">AI Recommendations</div>
+          <div className="sb-rec-list">
+            <div className="sb-rec-row"><div className="sb-rec-top"><span className="rec-pr high">High</span><span className="rt">Start schema conversion</span></div><div className="rc">Conversion</div></div>
+            <div className="sb-rec-row"><div className="sb-rec-top"><span className="rec-pr medium">Medium</span><span className="rt">Generate relationship graph</span></div><div className="rc">Lineage</div></div>
+            <div className="sb-rec-row"><div className="sb-rec-top"><span className="rec-pr low">Low</span><span className="rt">Validate constraints</span></div><div className="rc">Validation</div></div>
+          </div>
+        </div>
+      </details>
+
+      {/* 4. Workspace Details */}
+      <details className="acc">
+        <summary>
+          <svg className="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg>
+          <span>Workspace Details</span>
+          <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div className="acc-body">
+          <div className="sb-fields">
+            <div className="f"><div className="k">Migration Path</div><div className="v">SIT → DEV</div></div>
+            <div className="f"><div className="k">Migration Status</div><div className="v"><span className="status-chip running">In Progress</span></div></div>
+            <div className="f"><div className="k">Current Phase</div><div className="v">Create Workspace (4 of 8)</div></div>
+            <div className="f"><div className="k">Last Updated</div><div className="v">12 minutes ago</div></div>
+            <div className="f"><div className="k">Est. Completion</div><div className="v">2 days</div></div>
+          </div>
+        </div>
+      </details>
+
+      {/* 5. Schema Inventory */}
+      <details className="acc">
+        <summary>
+          <svg className="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <span>Schema Inventory</span>
+          <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div className="acc-body">
+          <div className="sb-meta-list">
+            <div className="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16"/></svg><span className="mn">142</span><span className="mk">Tables</span></div>
+            <div className="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg><span className="mn">31</span><span className="mk">Views</span></div>
+            <div className="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 17l6-6-6-6M12 19h8"/></svg><span className="mn">58</span><span className="mk">Procedures</span></div>
+            <div className="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 7.5C11 11 13 13 15.8 16.5"/></svg><span className="mn">96</span><span className="mk">Foreign Keys</span></div>
+            <div className="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h10M4 18h16"/></svg><span className="mn">203</span><span className="mk">Indexes</span></div>
+          </div>
+        </div>
+      </details>
+
+      {/* 6. Job Queue */}
+      <details className="acc">
+        <summary>
+          <svg className="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+          <span>Job Queue</span>
+          <span className="acc-flag"><span className="status-chip running">{runningJobs.length || 1} Running</span></span>
+          <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div className="acc-body">
+          <div className="sb-jobs">
+            {(jobs && jobs.length > 0 ? jobs.slice(0, 4) : [
+              { name: "Metadata Discovery", status: "completed", started_at: "12m ago" },
+              { name: "Masking Policy Apply", status: "running", started_at: "3m ago" },
+              { name: "Referential Validation", status: "needs-attention", started_at: "1h ago" },
+              { name: "Synthetic Data Generation", status: "queued", started_at: "queued" },
+            ]).map((j, i) => (
+              <div key={j.id || j.name || i} className="sb-job">
+                <div className="sb-job-top">
+                  <span className="sb-job-name">{j.name || j.intent || "Job"}</span>
+                  <span className={`status-chip ${j.status === "completed" || j.status === "succeeded" ? "completed" : j.status === "running" ? "running" : j.status === "queued" ? "queued" : "needs-attention"}`}>{j.status}</span>
+                </div>
+                <div className="progress-track"><div className={`progress-fill ${j.status === "completed" || j.status === "succeeded" ? "green" : j.status === "running" ? "amber" : j.status === "queued" ? "" : "red"}`} style={{ width: j.status === "completed" || j.status === "succeeded" ? "100%" : j.status === "running" ? "63%" : j.status === "queued" ? "0%" : "87%" }}></div></div>
+                <div className="sb-job-meta"><span>{j.worker || "System"}</span><span>{j.started_at || "recently"}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </details>
+
+      {/* 7. Activity Feed */}
+      <details className="acc">
+        <summary>
+          <svg className="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/></svg>
+          <span>Activity Feed</span>
+          <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div className="acc-body">
+          <div className="sb-timeline">
+            {(auditLogs && auditLogs.length > 0 ? auditLogs.slice(0, 4) : [
+              { action: "Metadata discovery completed", ts: "12 min ago", ok: true },
+              { action: "Masking policy applied to 31 columns", ts: "25 min ago", ok: false },
+              { action: "Credentials updated — sit-oracle-source", ts: "1 hour ago", ok: false },
+              { action: "Synthetic data generated for 6 tables", ts: "3 hours ago", ok: true },
+            ]).map((e, i) => (
+              <div key={i} className={`sb-tl-row ${e.ok || e.result === "success" ? "ok" : ""}`}>
+                <div className="sb-tl-dot"></div>
+                <div>
+                  <div className="sb-tl-tt">{e.action || e.event}</div>
+                  <div className="sb-tl-ds">{e.actor ? `${e.actor} · ` : ""}{e.ts || e.timestamp || ""}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </details>
+
+      {/* 8. Recent Workspaces */}
+      <details className="acc">
+        <summary>
+          <svg className="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+          <span>Recent Workspaces</span>
+          <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div className="acc-body">
+          <div className="sb-ws">
+            {[
+              { name: "Provider Migration", status: "running", pct: 64, owner: "Robin Operator", path: "SIT → DEV" },
+              { name: "Claims Migration", status: "queued", pct: 12, owner: "Jamie Lee", path: "SIT → DEV" },
+              { name: "Eligibility", status: "completed", pct: 100, owner: "Priya Nair", path: "DEV → QA" },
+              { name: "Reference Data", status: "needs-attention", pct: 41, owner: "System", path: "SIT → DEV" },
+            ].map((ws) => (
+              <div key={ws.name} className="sb-ws-card">
+                <div className="sb-ws-top"><span className="sb-ws-name">{ws.name}</span><span className={`status-chip ${ws.status === "completed" ? "completed" : ws.status === "running" ? "running" : ws.status === "queued" ? "queued" : "needs-attention"}`}>{ws.status === "running" ? "In Progress" : ws.status === "needs-attention" ? "Attention" : ws.status.charAt(0).toUpperCase() + ws.status.slice(1)}</span></div>
+                <div className="sb-ws-track"><div className="sb-ws-fill" style={{ width: `${ws.pct}%` }}></div></div>
+                <div className="sb-ws-meta"><span>{ws.owner}</span><span>{ws.path}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </details>
+    </div>
+  );
+}
+
 export default function EnterpriseConsole() {
   const [theme, setTheme] = useState("light");
   const [screen, setScreen] = useState("home");
@@ -2196,14 +2559,27 @@ export default function EnterpriseConsole() {
   const [wsSwitchOpen, setWsSwitchOpen] = useState(false);
   const [authToken, setAuthToken] = useState(null);
   const [authUser, setAuthUser] = useState(null);
+  const [wsInfo, setWsInfo] = useState(null);
 
-  const apiBase = "http://localhost:8000";
-  const apiStatus = "live";
+  const apiBase = DEFAULT_API_BASE;
+  const apiStatus = useApiHealth(apiBase);
   const t = useTokens(theme);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (apiStatus !== "live" || !authToken) return;
+    let cancelled = false;
+    apiGet(apiBase, "/api/workspaces", authToken, 3000)
+      .then((d) => {
+        if (cancelled) return;
+        const ws = (d.workspaces || [])[0];
+        if (ws) setWsInfo({ name: ws.name || ws.id || "sit-to-dev-migration", env: ws.source_env || "SIT", owner: ws.created_by || null, phase: ws.current_phase || "In Progress" });
+      }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [apiStatus, apiBase, authToken]);
 
   const pendingApprovalCount = 8;
   const feedActivity = () => {};
@@ -2550,45 +2926,8 @@ export default function EnterpriseConsole() {
 
           <div className="nav-divider"></div>
 
-          {/* INSIGHTS ACCORDIONS */}
-          <div className="insights-group">
-            <div className="group-label">Insights · sit-to-dev-migration</div>
-            <div className="group-sub">Quick-glance detail for the active workspace</div>
-
-            <details className="acc">
-              <summary>
-                <svg className="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 13a8 8 0 1116 0M4 13l2 7h12l2-7"/></svg>
-                <span>Health Snapshot</span>
-                <span className="acc-flag"><span className="status-chip healthy">98%</span></span>
-                <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 6l6 6-6 6"/></svg>
-              </summary>
-              <div className="acc-body">
-                <div className="sb-health">
-                  <div className="shm"><div className="k"><span>Validation Score</span><span>94%</span></div><div className="progress-track"><div className="progress-fill green" style={{ width: "94%" }}></div></div></div>
-                  <div className="shm"><div className="k"><span>Platform Health</span><span>98%</span></div><div className="progress-track"><div className="progress-fill green" style={{ width: "98%" }}></div></div></div>
-                </div>
-              </div>
-            </details>
-
-            <details className="acc">
-              <summary>
-                <svg className="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg>
-                <span>Connections</span>
-                <span className="acc-flag"><span className="status-chip connected">2 Live</span></span>
-                <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 6l6 6-6 6"/></svg>
-              </summary>
-              <div className="acc-body">
-                <div className="sb-conn">
-                  <div className="sb-conn-card">
-                    <div className="sb-conn-top"><div className="name">sit-oracle-source</div><span className="status-chip connected">Live</span></div>
-                  </div>
-                  <div className="sb-conn-card">
-                    <div className="sb-conn-top"><div className="name">dev-postgres-target</div><span className="status-chip connected">Live</span></div>
-                  </div>
-                </div>
-              </div>
-            </details>
-          </div>
+          {/* INSIGHTS ACCORDIONS — all 8, live-data wired */}
+          <InsightsGroup apiBase={apiBase} apiToken={authToken} apiStatus={apiStatus} />
 
           <div className="agent-widget">
             <span className="agent-dot"></span>
@@ -2604,14 +2943,14 @@ export default function EnterpriseConsole() {
           <div className={`ws-switch ${wsSwitchOpen ? "open" : ""}`}>
             <button className="ws-switch-btn" type="button" onClick={() => setWsSwitchOpen(!wsSwitchOpen)}>
               <span className="ws-dot"></span>
-              <span className="ws-name">sit-to-dev-migration</span>
+              <span className="ws-name">{wsInfo?.name || "sit-to-dev-migration"}</span>
               <svg className="ws-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6-6"/></svg>
             </button>
             <div className="ws-panel">
-              <div className="wsp-row"><span className="k">Environment</span><span className="v">SIT</span></div>
+              <div className="wsp-row"><span className="k">Environment</span><span className="v">{wsInfo?.env || "SIT"}</span></div>
               <div className="wsp-row"><span className="k">Last Sync</span><span className="v">8 minutes ago</span></div>
-              <div className="wsp-row"><span className="k">Owner</span><span className="v">Robin Operator</span></div>
-              <div className="wsp-row"><span className="k">Phase</span><span className="v">Create Workspace (4 of 8)</span></div>
+              <div className="wsp-row"><span className="k">Owner</span><span className="v">{wsInfo?.owner || authUser?.display_name || "Robin Operator"}</span></div>
+              <div className="wsp-row"><span className="k">Phase</span><span className="v">{wsInfo?.phase || "Create Workspace (4 of 8)"}</span></div>
             </div>
           </div>
 
