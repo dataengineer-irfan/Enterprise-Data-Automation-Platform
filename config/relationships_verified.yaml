@@ -1,0 +1,1392 @@
+module: Provider
+source: Rebuilt from REAL FK/PK constraint exports from SIT database (First_Query_results_in_SIT.xlsx,
+  2_query_results_in_SIT.xlsx) - supersedes the earlier inferred relationships.yaml
+important_notes:
+- This replaces the previous inferred relationships.yaml. Every relationship below is a VERIFIED constraint
+  from the live SIT database, not inferred from naming conventions.
+- The earlier DDL zip exports did not include constraints - this query result data is the authoritative
+  source and should be treated as ground truth.
+- '8 tables outside the P_* Provider set are referenced via FK: [''G_ATTACH_TB'', ''G_CMN_ENTY_TB'', ''G_COTS_LTR_REQ_TB'',
+  ''G_E_ADR_TB'', ''G_NOTE_SET_TB'', ''G_PHONE_TB'', ''R_PROV_NW_TB'', ''T_CARR_TB'']. These belong to
+  other schemas (Contact Management G_*, Reference R_*, Third-party T_*) and are not part of this Provider
+  DDL export.'
+core_table:
+  table: P_DTL_TB
+  primary_key: &id001
+  - P_SYS_ID
+tables:
+  P_ACPTNC_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_ACPTNC_SK
+    foreign_keys:
+    - fk_name: P_ACPTNC_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_AFFL_TB:
+    primary_key:
+    - P_GRP_SYS_ID
+    - P_MBR_SYS_ID
+    - P_AFFL_SK
+    foreign_keys:
+    - fk_name: P_AFFL_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_GRP_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    - fk_name: P_AFFL_F2
+      references_table: P_DTL_TB
+      child_columns:
+      - P_MBR_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_AFFL_TX:
+    foreign_keys:
+    - fk_name: P_AFFL_FX1
+      references_table: P_AFFL_TB
+      child_columns:
+      - P_GRP_SYS_ID
+      - P_MBR_SYS_ID
+      - P_AFFL_SK
+      parent_columns:
+      - P_GRP_SYS_ID
+      - P_MBR_SYS_ID
+      - P_AFFL_SK
+    required_for_active_status: false
+  P_ALT_ID_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_ALT_ID_SK
+    foreign_keys:
+    - fk_name: P_ALT_ID_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_APPL_STAT_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_APPL_STAT_SK
+    foreign_keys:
+    - fk_name: P_APPL_STAT_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: true
+  P_BLNG_MEDM_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_BLNG_MEDM_SK
+    foreign_keys:
+    - fk_name: P_BLNG_MEDM_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_CARE_CRD_TX:
+    primary_key:
+    - P_SYS_ID
+    - P_CARE_CRD_SK
+    foreign_keys:
+    - fk_name: P_CARE_CRD_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_CLIA_CERT_TB:
+    primary_key:
+    - P_CLIA_NUM
+    - P_CLIA_CERT_LI_NUM
+    - P_CLIA_CERT_TY_CD
+    - P_CLIA_CERT_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_CLIA_CERT_F1
+      references_table: P_CLIA_LAB_TB
+      child_columns:
+      - P_CLIA_NUM
+      parent_columns:
+      - P_CLIA_NUM
+    required_for_active_status: false
+  P_CLIA_LAB_CD_TB:
+    primary_key:
+    - P_CLIA_NUM
+    - P_CLIA_LAB_CD
+    - P_CLIA_CERT_BEG_DT
+    foreign_keys:
+    - fk_name: P_CLIA_LAB_CD_F1
+      references_table: P_CLIA_LAB_TB
+      child_columns:
+      - P_CLIA_NUM
+      parent_columns:
+      - P_CLIA_NUM
+    required_for_active_status: false
+  P_CLIA_LAB_TB:
+    primary_key:
+    - P_CLIA_NUM
+    foreign_keys:
+    - fk_name: P_CLIA_LAB_F1
+      references_table: G_NOTE_SET_TB
+      child_columns:
+      - G_NOTE_SET_SK
+      parent_columns:
+      - G_NOTE_SET_SK
+    - fk_name: P_CLIA_LAB_F2
+      references_table: G_CMN_ENTY_TB
+      child_columns:
+      - G_CMN_ENTY_SK
+      parent_columns:
+      - G_CMN_ENTY_SK
+    required_for_active_status: false
+  P_CLIA_PROV_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_CLIA_PROV_SK
+    foreign_keys:
+    - fk_name: P_CLIA_PROV_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    - fk_name: P_CLIA_PROV_F2
+      references_table: P_CLIA_LAB_TB
+      child_columns:
+      - P_CLIA_NUM
+      parent_columns:
+      - P_CLIA_NUM
+    required_for_active_status: false
+  P_CMN_LIC_UPLOAD_TB:
+    primary_key:
+    - P_LIC_CERT_NUM
+    - P_CMN_LIC_ACTN_CD
+    required_for_active_status: false
+  P_COS_STAT_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_COS_STAT_SK
+    foreign_keys:
+    - fk_name: P_COS_STAT_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_DSH_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_DSH_SK
+    foreign_keys:
+    - fk_name: P_DSH_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_DSH_TX:
+    foreign_keys:
+    - fk_name: P_DSH_FX1
+      references_table: P_DSH_TB
+      child_columns:
+      - P_SYS_ID
+      - P_DSH_SK
+      parent_columns:
+      - P_SYS_ID
+      - P_DSH_SK
+    required_for_active_status: false
+  P_DTL_TB:
+    primary_key: *id001
+    foreign_keys:
+    - fk_name: P_DTL_F1
+      references_table: G_NOTE_SET_TB
+      child_columns:
+      - G_NOTE_SET_SK
+      parent_columns:
+      - G_NOTE_SET_SK
+    - fk_name: P_DTL_F2
+      references_table: G_CMN_ENTY_TB
+      child_columns:
+      - G_CMN_ENTY_SK
+      parent_columns:
+      - G_CMN_ENTY_SK
+    required_for_active_status: false
+  P_DTL_TX:
+    foreign_keys:
+    - fk_name: P_DTL_FX1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_ELIGIBLE_RECIP_ENTRY_FORM_TN:
+    primary_key:
+    - P_SYS_ID
+    - P_RECIP_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_ELIGIBLE_RECIP_ENTRY_FORMFN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_ENROL_AFFL_TB:
+    primary_key:
+    - P_ENROL_SYS_ID
+    - P_ENROL_AFFL_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_ENROL_AFFL_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_MBR_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    - fk_name: P_ENROL_AFFL_F2
+      references_table: P_DTL_TB
+      child_columns:
+      - P_GRP_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    - fk_name: P_ENROL_AFFL_F3
+      references_table: P_DTL_TB
+      child_columns:
+      - P_ENROL_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_ENROL_AFFL_TX:
+    foreign_keys:
+    - fk_name: P_ENROL_AFFL_FX1
+      references_table: P_ENROL_AFFL_TB
+      child_columns:
+      - P_ENROL_SYS_ID
+      - P_ENROL_AFFL_SEQ_NUM
+      parent_columns:
+      - P_ENROL_SYS_ID
+      - P_ENROL_AFFL_SEQ_NUM
+    required_for_active_status: false
+  P_ENROL_ALT_ID_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_ENROL_ALT_ID_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_ENROL_ALT_ID_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_ENROL_STAT_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_ENROL_STAT_SK
+    foreign_keys:
+    - fk_name: P_ENROL_STAT_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: true
+  P_ENROL_STAT_TX:
+    foreign_keys:
+    - fk_name: P_ENROL_STAT_FX1
+      references_table: P_ENROL_STAT_TB
+      child_columns:
+      - P_SYS_ID
+      - P_ENROL_STAT_SK
+      parent_columns:
+      - P_SYS_ID
+      - P_ENROL_STAT_SK
+    required_for_active_status: false
+  P_ENROL_TP_INFO_TB:
+    primary_key:
+    - P_SYS_ID
+    foreign_keys:
+    - fk_name: P_ENROL_TP_INFO_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    - fk_name: P_ENROL_TP_INFO_F2
+      references_table: G_NOTE_SET_TB
+      child_columns:
+      - G_NOTE_SET_SK
+      parent_columns:
+      - G_NOTE_SET_SK
+    required_for_active_status: false
+  P_ENROL_TP_TXN_INFO_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_TXN_TP_INFO_SK
+    foreign_keys:
+    - fk_name: P_ENROL_TP_TXN_INFO_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_EVENT_RSN_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_EVENT_SK
+    - P_EVENT_RSN_SK
+    foreign_keys:
+    - fk_name: P_EVENT_RSN_F1
+      references_table: P_EVENT_TB
+      child_columns:
+      - P_SYS_ID
+      - P_EVENT_SK
+      parent_columns:
+      - P_SYS_ID
+      - P_EVENT_SK
+    required_for_active_status: false
+  P_EVENT_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_EVENT_SK
+    foreign_keys:
+    - fk_name: P_EVENT_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_FACI_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_FACI_SK
+    foreign_keys:
+    - fk_name: P_FACI_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_GLBL_ENDRSMNTS_SOUGHT_TN:
+    primary_key:
+    - P_SYS_ID
+    - P_ENDRSMNT_CD
+    foreign_keys:
+    - fk_name: P_GLBL_ENDRSMNTS_SOUGHT_FN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_GLBL_ENDRSMNTS_TN:
+    primary_key:
+    - P_SYS_ID
+    - P_ENDRSMNT_CD
+    foreign_keys:
+    - fk_name: P_GLBL_ENDRSMNTS_FN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_HCIDEA_ALT_ID_TB:
+    primary_key:
+    - P_HCIDEA_ALT_ID
+    - P_HCIDEA_ALT_ID_TY_CD
+    - P_HCIDEA_SYS_ID
+    foreign_keys:
+    - fk_name: P_HCIDEA_ALT_ID_F1
+      references_table: P_HCIDEA_PROV_TB
+      child_columns:
+      - P_HCIDEA_SYS_ID
+      parent_columns:
+      - P_HCIDEA_SYS_ID
+    required_for_active_status: false
+  P_HCIDEA_PROV_ADR_MCAID_TB:
+    primary_key:
+    - P_HCIDEA_SYS_ID
+    - P_HCIDEA_ADR_SYS_ID
+    - P_HCIDEA_MCAID_STATE_CD
+    - P_HCIDEA_MCAID_ID
+    foreign_keys:
+    - fk_name: P_HCIDEA_PROV_ADR_MCAID_F1
+      references_table: P_HCIDEA_PROV_ADR_TB
+      child_columns:
+      - P_HCIDEA_SYS_ID
+      - P_HCIDEA_ADR_SYS_ID
+      parent_columns:
+      - P_HCIDEA_SYS_ID
+      - P_HCIDEA_ADR_SYS_ID
+    required_for_active_status: false
+  P_HCIDEA_PROV_ADR_PHONE_TB:
+    primary_key:
+    - P_HCIDEA_SYS_ID
+    - P_HCIDEA_ADR_SYS_ID
+    - P_HCIDEA_PHONE_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_HCIDEA_PROV_ADDR_PHONE_F1
+      references_table: P_HCIDEA_PROV_ADR_TB
+      child_columns:
+      - P_HCIDEA_SYS_ID
+      - P_HCIDEA_ADR_SYS_ID
+      parent_columns:
+      - P_HCIDEA_SYS_ID
+      - P_HCIDEA_ADR_SYS_ID
+    required_for_active_status: false
+  P_HCIDEA_PROV_ADR_SPI_TB:
+    primary_key:
+    - P_HCIDEA_SYS_ID
+    - P_HCIDEA_ADR_SYS_ID
+    - P_HCIDEA_SPI_ROOT_ID
+    - P_HCIDEA_SPI_LOCN_CD
+    foreign_keys:
+    - fk_name: P_HCIDEA_PROV_ADR_SPI_F1
+      references_table: P_HCIDEA_PROV_ADR_TB
+      child_columns:
+      - P_HCIDEA_SYS_ID
+      - P_HCIDEA_ADR_SYS_ID
+      parent_columns:
+      - P_HCIDEA_SYS_ID
+      - P_HCIDEA_ADR_SYS_ID
+    required_for_active_status: false
+  P_HCIDEA_PROV_ADR_TB:
+    primary_key:
+    - P_HCIDEA_SYS_ID
+    - P_HCIDEA_ADR_SYS_ID
+    foreign_keys:
+    - fk_name: P_HCIDEA_PROV_ADR_F1
+      references_table: P_HCIDEA_PROV_TB
+      child_columns:
+      - P_HCIDEA_SYS_ID
+      parent_columns:
+      - P_HCIDEA_SYS_ID
+    required_for_active_status: false
+  P_HCIDEA_PROV_DEG_TB:
+    primary_key:
+    - P_HCIDEA_SYS_ID
+    - P_HCIDEA_DEG_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_HCIDEA_PROV_DEG_F1
+      references_table: P_HCIDEA_PROV_TB
+      child_columns:
+      - P_HCIDEA_SYS_ID
+      parent_columns:
+      - P_HCIDEA_SYS_ID
+    required_for_active_status: false
+  P_HCIDEA_PROV_LIC_TB:
+    primary_key:
+    - P_HCIDEA_SYS_ID
+    - P_HCIDEA_LIC_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_HCIDEA_PROV_LIC_F1
+      references_table: P_HCIDEA_PROV_TB
+      child_columns:
+      - P_HCIDEA_SYS_ID
+      parent_columns:
+      - P_HCIDEA_SYS_ID
+    required_for_active_status: false
+  P_HCIDEA_PROV_SPECL_TB:
+    primary_key:
+    - P_HCIDEA_SYS_ID
+    - P_HCIDEA_SPECL_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_HCIDEA_PROV_SPECL_F1
+      references_table: P_HCIDEA_PROV_TB
+      child_columns:
+      - P_HCIDEA_SYS_ID
+      parent_columns:
+      - P_HCIDEA_SYS_ID
+    required_for_active_status: false
+  P_HCIDEA_PROV_TB:
+    primary_key:
+    - P_HCIDEA_SYS_ID
+    required_for_active_status: false
+  P_HCIDEA_PROV_TXNMY_TB:
+    primary_key:
+    - P_HCIDEA_SYS_ID
+    - P_HCIDEA_TXNMY_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_HCIDEA_PROV_TXNMY_F1
+      references_table: P_HCIDEA_PROV_TB
+      child_columns:
+      - P_HCIDEA_SYS_ID
+      parent_columns:
+      - P_HCIDEA_SYS_ID
+    required_for_active_status: false
+  P_IF_1915I_TB:
+    primary_key:
+    - P_IF_1915I_SK
+    required_for_active_status: false
+  P_IF_PT_PS_TB:
+    primary_key:
+    - P_IF_NAM
+    - P_TY_CD
+    - P_SPECL_CD
+    required_for_active_status: false
+  P_IF_SANDATA_TB:
+    primary_key:
+    - P_IF_SANDATA_SK
+    required_for_active_status: false
+  P_IF_THERAP_TB:
+    primary_key:
+    - P_IF_THERAP_SK
+    required_for_active_status: false
+  P_INTERP_SVC_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_INTERP_SVC_SK
+    foreign_keys:
+    - fk_name: P_INTERP_SVC_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_LANG_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_LANG_SK
+    foreign_keys:
+    - fk_name: P_LANG_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_LIC_CERT_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_LIC_CERT_SK
+    foreign_keys:
+    - fk_name: P_LIC_CERT_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: true
+  P_LTR_REQ_TB:
+    primary_key:
+    - P_SYS_ID
+    - G_COTS_LTR_REQ_SK
+    foreign_keys:
+    - fk_name: P_LTR_REQ_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    - fk_name: P_LTR_REQ_F2
+      references_table: G_COTS_LTR_REQ_TB
+      child_columns:
+      - G_COTS_LTR_REQ_SK
+      parent_columns:
+      - G_COTS_LTR_REQ_SK
+    required_for_active_status: false
+  P_MCARE_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_MCARE_SK
+    foreign_keys:
+    - fk_name: P_MCARE_F1
+      references_table: T_CARR_TB
+      child_columns:
+      - T_CARR_ID
+      parent_columns:
+      - T_CARR_ID
+    - fk_name: P_MCARE_F2
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_MC_PRTCPTN_TN:
+    primary_key:
+    - P_SYS_ID
+    - P_MC_PRTCPTN_PROG_CD
+    - P_MC_PROG_PRTCPTN_BEG_DT
+    foreign_keys:
+    - fk_name: P_MC_PRTCPTN_FN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_NONMED_PROV_RECIP_TN:
+    primary_key:
+    - P_SYS_ID
+    - B_SYS_ID
+    - G_CNTY_CD
+    - P_SCRN_LOCN_CD
+    foreign_keys:
+    - fk_name: P_NONMED_PROV_RECIP_FN3
+      references_table: P_PROV_CNTY_TN
+      child_columns:
+      - P_SYS_ID
+      - G_CNTY_CD
+      - P_SCRN_LOCN_CD
+      parent_columns:
+      - P_SYS_ID
+      - G_CNTY_CD
+      - P_SCRN_LOCN_CD
+    required_for_active_status: false
+  P_NPPES_NPI_SRC_OTHER_ID_TB:
+    primary_key:
+    - P_NPI_NUM
+    - P_NPPES_NPI_SRC_OTH_ID_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_NPPES_NPI_SRC_OTHER_ID_F1
+      references_table: P_NPPES_NPI_SRC_TB
+      child_columns:
+      - P_NPI_NUM
+      parent_columns:
+      - P_NPI_NUM
+    required_for_active_status: false
+  P_NPPES_NPI_SRC_TB:
+    primary_key:
+    - P_NPI_NUM
+    required_for_active_status: false
+  P_NPPES_NPI_SRC_TXNMY_TB:
+    primary_key:
+    - P_NPI_NUM
+    - P_NPPES_NPI_SRC_TXNMY_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_NPPES_NPI_SRC_TXNMY_F1
+      references_table: P_NPPES_NPI_SRC_TB
+      child_columns:
+      - P_NPI_NUM
+      parent_columns:
+      - P_NPI_NUM
+    required_for_active_status: false
+  P_NUM_BED_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_NUM_BED_SK
+    foreign_keys:
+    - fk_name: P_NUM_BED_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_NW_PART_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_NW_PART_SK
+    foreign_keys:
+    - fk_name: P_NW_PART_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    - fk_name: P_NW_PART_F2
+      references_table: R_PROV_NW_TB
+      child_columns:
+      - R_NW_ID
+      parent_columns:
+      - R_NW_ID
+    required_for_active_status: false
+  P_OFC_HRS_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_OFC_HRS_SK
+    foreign_keys:
+    - fk_name: P_OFC_HRS_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_OIG_PROV_MATCH_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_OIG_SK
+    - P_OIG_MATCH_CD
+    foreign_keys:
+    - fk_name: P_OIG_PROV_MATCH_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    - fk_name: P_OIG_PROV_MATCH_F2
+      references_table: P_OIG_PROV_XREF_TB
+      child_columns:
+      - P_SYS_ID
+      - P_OIG_SK
+      parent_columns:
+      - P_SYS_ID
+      - P_OIG_SK
+    required_for_active_status: false
+  P_OIG_PROV_XREF_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_OIG_SK
+    foreign_keys:
+    - fk_name: P_OIG_PROV_XREF_F1
+      references_table: P_OIG_TB
+      child_columns:
+      - P_OIG_SK
+      parent_columns:
+      - P_OIG_SK
+    - fk_name: P_OIG_PROV_XREF_F2
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_OIG_TB:
+    primary_key:
+    - P_OIG_SK
+    foreign_keys:
+    - fk_name: P_OIG_F1
+      references_table: G_CMN_ENTY_TB
+      child_columns:
+      - G_CMN_ENTY_SK
+      parent_columns:
+      - G_CMN_ENTY_SK
+    - fk_name: P_OIG_F2
+      references_table: G_NOTE_SET_TB
+      child_columns:
+      - G_NOTE_SET_SK
+      parent_columns:
+      - G_NOTE_SET_SK
+    required_for_active_status: false
+  P_OWNER_DTL_TB:
+    primary_key:
+    - P_OWNER_TAX_ID
+    - P_OWNER_DTL_SEQ_NUM
+    required_for_active_status: false
+  P_OWNER_XREF_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_OWNER_TAX_ID
+    - P_OWNER_DTL_SEQ_NUM
+    - P_OWNER_XREF_SK
+    foreign_keys:
+    - fk_name: P_OWNER_XREF_F1
+      references_table: P_OWNER_DTL_TB
+      child_columns:
+      - P_OWNER_TAX_ID
+      - P_OWNER_DTL_SEQ_NUM
+      parent_columns:
+      - P_OWNER_TAX_ID
+      - P_OWNER_DTL_SEQ_NUM
+    - fk_name: P_OWNER_XREF_F2
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_OWNRSHP_CHG_REQ_TN:
+    primary_key:
+    - P_SYS_ID
+    foreign_keys:
+    - fk_name: P_OWNRSHP_CHG_REQ_FN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_PBM_NW_PRTCPTN_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_NW_PART_SK
+    - P_PBM_NW_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_PBM_NW_PRTCPTN_F1
+      references_table: P_NW_PART_TB
+      child_columns:
+      - P_SYS_ID
+      - P_NW_PART_SK
+      parent_columns:
+      - P_SYS_ID
+      - P_NW_PART_SK
+    required_for_active_status: false
+  P_PREV_MCAID_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_PREV_MCAID_SK
+    foreign_keys:
+    - fk_name: P_PREV_MCAID_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_PREV_NAM_TN:
+    primary_key:
+    - P_SYS_ID
+    - P_PREV_NAM_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_PREV_NAM_FN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_PROG_INFO_REQ_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_PROG_INFO_REQ_SK
+    foreign_keys:
+    - fk_name: P_PROG_INFO_REQ_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_PROV_CNTY_TN:
+    primary_key:
+    - P_SYS_ID
+    - G_CNTY_CD
+    - P_SCRN_LOCN_CD
+    foreign_keys:
+    - fk_name: P_PROV_CNTY_FN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_PROV_HRARCHY_TB:
+    primary_key:
+    - P_PROV_HRARCHY_NUM
+    required_for_active_status: false
+  P_QSP_PROV_RECIP_TN:
+    primary_key:
+    - P_SYS_ID
+    - P_QSP_PROV_RECIP_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_QSP_PROV_RECIP_FN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_QSP_QSTNR_INITIALED_RESP_TN:
+    primary_key:
+    - P_SYS_ID
+    - P_QSTNR_SECT_CD
+    - P_QSTNR_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_QSP_QSTNR_INITIALED_RESP_FN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_QSP_QSTNR_TN:
+    primary_key:
+    - P_SYS_ID
+    - P_QSTNR_SECT_CD
+    - P_QSTNR_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_QSP_QSTNR_FN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_QSTNR_ADVRS_LEGAL_ACTN_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_QSTNR_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_QSTNR_ADVRS_LEGAL_ACTN_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_QSTNR_EXCLSN_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_QSTNR_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_QSTNR_EXCLSN_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_QSTNR_OTHER_STATE_TB:
+    primary_key:
+    - P_SYS_ID
+    foreign_keys:
+    - fk_name: P_QSTNR_OTHER_STATE_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_QSTNR_OVR_PMT_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_QSTNR_SEQ_NUM
+    foreign_keys:
+    - fk_name: P_QSTNR_OVR_PMT_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_QSTNR_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_QSTNR_SK
+    foreign_keys:
+    - fk_name: P_QSTNR_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_RA_MEDM_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_RA_MEDM_SK
+    foreign_keys:
+    - fk_name: P_RA_MEDM_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_RA_MEDM_TX:
+    foreign_keys:
+    - fk_name: P_RA_MEDM_FX1
+      references_table: P_RA_MEDM_TB
+      child_columns:
+      - P_SYS_ID
+      - P_RA_MEDM_SK
+      parent_columns:
+      - P_SYS_ID
+      - P_RA_MEDM_SK
+    - fk_name: P_RA_MEDM_FX2
+      references_table: G_PHONE_TB
+      child_columns:
+      - G_CLRG_HOUSE_PHONE_SK
+      parent_columns:
+      - G_PHONE_SK
+    - fk_name: P_RA_MEDM_FX3
+      references_table: G_E_ADR_TB
+      child_columns:
+      - G_CLRG_HOUSE_EMAIL_SK
+      parent_columns:
+      - G_E_ADR_SK
+    required_for_active_status: false
+  P_REQ_ATTACH_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_REQ_ATTACH_SK
+    foreign_keys:
+    - fk_name: P_REQ_ATTACH_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_REVAL_STAT_TN:
+    primary_key:
+    - P_SYS_ID
+    foreign_keys:
+    - fk_name: P_REVAL_STAT_FN1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_RPT_CLDI_ERR_TB:
+    primary_key:
+    - P_CLDI_ERR_SK
+    required_for_active_status: false
+  P_RPT_CMS_UPD_TB:
+    primary_key:
+    - P_RPT_CMS_UPD_SK
+    required_for_active_status: false
+  P_RPT_DOT_EXTRT_TN:
+    primary_key:
+    - P_RPT_DOT_EXTRT_SK
+    required_for_active_status: false
+  P_RPT_NCPDP_IFACE_ERR_TB:
+    primary_key:
+    - P_NCPDP_IFACE_ERR_SK
+    required_for_active_status: false
+  P_RPT_NCPDP_IFACE_UPD_TB:
+    primary_key:
+    - P_NCPDP_IFACE_UPD_SK
+    required_for_active_status: false
+  P_RPT_NCPDP_TB:
+    primary_key:
+    - P_RPT_NCPDP_SK
+    required_for_active_status: false
+  P_RPT_PBM_STATS_TB:
+    primary_key:
+    - P_RPT_PBM_STATS_SK
+    required_for_active_status: false
+  P_RPT_PHARM_UPD_TB:
+    primary_key:
+    - P_RPT_PHARM_UPD_SK
+    required_for_active_status: false
+  P_RPT_TERM_LCKN_LCKT_TB:
+    primary_key:
+    - P_RPT_TERM_LCKN_LCKT_SK
+    required_for_active_status: false
+  P_RSK_SCRN_TN:
+    primary_key:
+    - P_SYS_ID
+    - P_RSK_SCRN_SK
+    foreign_keys:
+    - fk_name: P_RSK_SCRN_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_SPECL_NEED_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_SPECL_NEED_SK
+    foreign_keys:
+    - fk_name: P_SPECL_NEED_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_SPECL_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_SPECL_SK
+    foreign_keys:
+    - fk_name: P_SPECL_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: true
+  P_SVC_TY_CD_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_SVC_TY_SK
+    foreign_keys:
+    - fk_name: P_SVC_TY_CD_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_TAX_NTC_TB:
+    primary_key:
+    - P_SYS_ID
+    foreign_keys:
+    - fk_name: P_TAX_NTC_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+  P_TRNG_CRSE_TB:
+    primary_key:
+    - P_TRNG_CRSE_ID
+    foreign_keys:
+    - fk_name: P_TRNG_CRSE_F1
+      references_table: G_NOTE_SET_TB
+      child_columns:
+      - G_NOTE_SET_SK
+      parent_columns:
+      - G_NOTE_SET_SK
+    required_for_active_status: false
+  P_TRNG_RGSTR_TB:
+    primary_key:
+    - P_TRNG_CRSE_ID
+    - P_TRNG_SESSN_ID
+    - G_PROV_CMN_ENTY_SK
+    foreign_keys:
+    - fk_name: P_TRNG_RGSTR_F1
+      references_table: G_CMN_ENTY_TB
+      child_columns:
+      - G_PROV_CMN_ENTY_SK
+      parent_columns:
+      - G_CMN_ENTY_SK
+    - fk_name: P_TRNG_RGSTR_F2
+      references_table: P_TRNG_SESSN_TB
+      child_columns:
+      - P_TRNG_CRSE_ID
+      - P_TRNG_SESSN_ID
+      parent_columns:
+      - P_TRNG_CRSE_ID
+      - P_TRNG_SESSN_ID
+    required_for_active_status: false
+  P_TRNG_SESSN_ATTACH_TB:
+    primary_key:
+    - P_TRNG_CRSE_ID
+    - P_TRNG_SESSN_ID
+    - G_ATTACH_SK
+    foreign_keys:
+    - fk_name: P_TRNG_SESSN_ATTACH_F1
+      references_table: P_TRNG_SESSN_TB
+      child_columns:
+      - P_TRNG_CRSE_ID
+      - P_TRNG_SESSN_ID
+      parent_columns:
+      - P_TRNG_CRSE_ID
+      - P_TRNG_SESSN_ID
+    - fk_name: P_TRNG_SESSN_ATTACH_F2
+      references_table: G_ATTACH_TB
+      child_columns:
+      - G_ATTACH_SK
+      parent_columns:
+      - G_ATTACH_SK
+    required_for_active_status: false
+  P_TRNG_SESSN_TB:
+    primary_key:
+    - P_TRNG_CRSE_ID
+    - P_TRNG_SESSN_ID
+    foreign_keys:
+    - fk_name: P_TRNG_SESSN_F1
+      references_table: P_TRNG_CRSE_TB
+      child_columns:
+      - P_TRNG_CRSE_ID
+      parent_columns:
+      - P_TRNG_CRSE_ID
+    - fk_name: P_TRNG_SESSN_F2
+      references_table: G_NOTE_SET_TB
+      child_columns:
+      - G_NOTE_SET_SK
+      parent_columns:
+      - G_NOTE_SET_SK
+    required_for_active_status: false
+  P_TXNMY_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_TXNMY_SK
+    foreign_keys:
+    - fk_name: P_TXNMY_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: true
+  P_TY_SPECL_TXNMY_XREF_TB:
+    primary_key:
+    - P_INDIV_GRP_CD
+    - P_TY_CD
+    - P_SPECL_CD
+    - P_TXNMY_CD
+    required_for_active_status: false
+  P_TY_SPECL_XREF_TB:
+    primary_key:
+    - P_TY_CD
+    - P_SPECL_CD
+    required_for_active_status: false
+  P_TY_TB:
+    primary_key:
+    - P_SYS_ID
+    - P_TY_SK
+    foreign_keys:
+    - fk_name: P_TY_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: true
+  P_WEB_DSPLY_TB:
+    primary_key:
+    - P_SYS_ID
+    foreign_keys:
+    - fk_name: P_WEB_DSPLY_F1
+      references_table: P_DTL_TB
+      child_columns:
+      - P_SYS_ID
+      parent_columns:
+      - P_SYS_ID
+    required_for_active_status: false
+insert_order:
+- P_CLIA_LAB_TB
+- P_CMN_LIC_UPLOAD_TB
+- P_DTL_TB
+- P_HCIDEA_PROV_TB
+- P_IF_1915I_TB
+- P_IF_PT_PS_TB
+- P_IF_SANDATA_TB
+- P_IF_THERAP_TB
+- P_NPPES_NPI_SRC_TB
+- P_OIG_TB
+- P_OWNER_DTL_TB
+- P_PROV_HRARCHY_TB
+- P_RPT_CLDI_ERR_TB
+- P_RPT_CMS_UPD_TB
+- P_RPT_DOT_EXTRT_TN
+- P_RPT_NCPDP_IFACE_ERR_TB
+- P_RPT_NCPDP_IFACE_UPD_TB
+- P_RPT_NCPDP_TB
+- P_RPT_PBM_STATS_TB
+- P_RPT_PHARM_UPD_TB
+- P_RPT_TERM_LCKN_LCKT_TB
+- P_TRNG_CRSE_TB
+- P_TY_SPECL_TXNMY_XREF_TB
+- P_TY_SPECL_XREF_TB
+- P_CLIA_CERT_TB
+- P_CLIA_LAB_CD_TB
+- P_ACPTNC_TB
+- P_AFFL_TB
+- P_ALT_ID_TB
+- P_APPL_STAT_TB
+- P_BLNG_MEDM_TB
+- P_CARE_CRD_TX
+- P_CLIA_PROV_TB
+- P_COS_STAT_TB
+- P_DSH_TB
+- P_DTL_TX
+- P_ELIGIBLE_RECIP_ENTRY_FORM_TN
+- P_ENROL_AFFL_TB
+- P_ENROL_ALT_ID_TB
+- P_ENROL_STAT_TB
+- P_ENROL_TP_INFO_TB
+- P_ENROL_TP_TXN_INFO_TB
+- P_EVENT_TB
+- P_FACI_TB
+- P_GLBL_ENDRSMNTS_SOUGHT_TN
+- P_GLBL_ENDRSMNTS_TN
+- P_INTERP_SVC_TB
+- P_LANG_TB
+- P_LIC_CERT_TB
+- P_LTR_REQ_TB
+- P_MCARE_TB
+- P_MC_PRTCPTN_TN
+- P_NUM_BED_TB
+- P_NW_PART_TB
+- P_OFC_HRS_TB
+- P_OWNRSHP_CHG_REQ_TN
+- P_PREV_MCAID_TB
+- P_PREV_NAM_TN
+- P_PROG_INFO_REQ_TB
+- P_PROV_CNTY_TN
+- P_QSP_PROV_RECIP_TN
+- P_QSP_QSTNR_INITIALED_RESP_TN
+- P_QSP_QSTNR_TN
+- P_QSTNR_ADVRS_LEGAL_ACTN_TB
+- P_QSTNR_EXCLSN_TB
+- P_QSTNR_OTHER_STATE_TB
+- P_QSTNR_OVR_PMT_TB
+- P_QSTNR_TB
+- P_RA_MEDM_TB
+- P_REQ_ATTACH_TB
+- P_REVAL_STAT_TN
+- P_RSK_SCRN_TN
+- P_SPECL_NEED_TB
+- P_SPECL_TB
+- P_SVC_TY_CD_TB
+- P_TAX_NTC_TB
+- P_TXNMY_TB
+- P_TY_TB
+- P_WEB_DSPLY_TB
+- P_HCIDEA_ALT_ID_TB
+- P_HCIDEA_PROV_ADR_TB
+- P_HCIDEA_PROV_DEG_TB
+- P_HCIDEA_PROV_LIC_TB
+- P_HCIDEA_PROV_SPECL_TB
+- P_HCIDEA_PROV_TXNMY_TB
+- P_NPPES_NPI_SRC_OTHER_ID_TB
+- P_NPPES_NPI_SRC_TXNMY_TB
+- P_OIG_PROV_XREF_TB
+- P_OWNER_XREF_TB
+- P_TRNG_SESSN_TB
+- P_AFFL_TX
+- P_DSH_TX
+- P_ENROL_AFFL_TX
+- P_ENROL_STAT_TX
+- P_EVENT_RSN_TB
+- P_PBM_NW_PRTCPTN_TB
+- P_NONMED_PROV_RECIP_TN
+- P_RA_MEDM_TX
+- P_HCIDEA_PROV_ADR_MCAID_TB
+- P_HCIDEA_PROV_ADR_PHONE_TB
+- P_HCIDEA_PROV_ADR_SPI_TB
+- P_OIG_PROV_MATCH_TB
+- P_TRNG_RGSTR_TB
+- P_TRNG_SESSN_ATTACH_TB
+insert_sequence_active_provider:
+- step: 1
+  action: Insert P_DTL_TB
+  captures: P_SYS_ID (generated)
+- step: 2
+  action: Insert P_TY_TB using P_SYS_ID
+  purpose: Provider Type
+- step: 3
+  action: Insert P_TXNMY_TB using P_SYS_ID
+  purpose: Taxonomy
+- step: 4
+  action: Insert P_SPECL_TB using P_SYS_ID
+  purpose: Specialty
+- step: 5
+  action: Insert P_LIC_CERT_TB using P_SYS_ID
+  purpose: License Certification
+- step: 6
+  action: Insert P_ENROL_STAT_TB using P_SYS_ID
+  purpose: Enrollment Status - set Active
+- step: 7
+  action: Insert P_ALT_ID_TB using P_SYS_ID with alt-id-type = NPI
+  purpose: NPI stored as alternate ID row
+business_rules:
+- rule_id: BR-REL-001
+  description: A provider is not fully Active without rows in P_TY_TB, P_TXNMY_TB, P_SPECL_TB, P_LIC_CERT_TB,
+    and an Active row in P_ENROL_STAT_TB.
+- rule_id: BR-REL-002
+  description: All FK columns must resolve to an existing parent row before insert - verified constraints
+    will reject orphaned child rows at the database level.
+- rule_id: BR-REL-003
+  description: P_AFFL_TB self-references P_DTL_TB twice (P_GRP_SYS_ID and P_MBR_SYS_ID) - both must be
+    valid existing P_SYS_ID values.

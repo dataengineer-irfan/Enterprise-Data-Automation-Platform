@@ -1,0 +1,11 @@
+term_id,business_term,definition,physical_mapping
+GLS-001,Provider Number,Unique identifier assigned to a provider in the sandbox system,PROVIDER.PROVIDER_ID
+GLS-002,NPI,National Provider Identifier - 10-digit federal ID for healthcare providers,PROVIDER.NPI_NBR
+GLS-003,Taxonomy Code,NUCC code classifying a provider's specialty and type,PROVIDER_TAXONOMY.TAXONOMY_CD
+GLS-004,Provider Status,Current enrollment state of a provider,PROVIDER.STATUS_CD
+GLS-005,Enrollment Date,Date a provider was approved into the Medicaid program,PROVIDER.ENROLLMENT_DT
+GLS-006,Termination Date,Date a provider's enrollment ended,PROVIDER.TERM_DT
+GLS-007,Service Location,Physical address where a provider renders services,PROVIDER_ADDRESS.ADDR_ID
+GLS-008,License Number,State-issued professional license identifier,PROVIDER_LICENSE.LICENSE_NBR
+GLS-009,Specialty,Clinical specialty area a provider is credentialed for,PROVIDER_SPECIALTY.SPECIALTY_CD
+GLS-010,Medicaid ID,State Medicaid program identifier assigned to a provider,PROVIDER.MEDICAID_ID

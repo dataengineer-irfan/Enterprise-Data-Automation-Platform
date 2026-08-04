@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enterprise Platform Console</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>" />
+  <style>
+    html, body, #app { height: 100%; margin: 0; }
+    body {
+      background: var(--bg-canvas, #fafafb);
+      color: var(--text, #1c1c21);
+      font-family: Inter, Arial, sans-serif;
+    }
+    .loader {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      color: #93a0b7;
+      background: radial-gradient(circle at top, #16213f, #0A0D13 65%);
+    }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@19.2.8",
+      "react/jsx-runtime": "https://esm.sh/react@19.2.8/jsx-runtime",
+      "react-dom/client": "https://esm.sh/react-dom@19.2.8/client",
+      "lucide-react": "https://esm.sh/lucide-react@1.28.0"
+    }
+  }
+  </script>
+  <script>
+    (function() {
+      const origWarn = console.warn;
+      console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+        origWarn.apply(console, args);
+      };
+    })();
+  </script>
+  <script src="./vendor/babel.min.js"></script>
+</head>
+<body>
+  <div id="app" class="loader">
+    <div>Loading Enterprise Console…</div>
+  </div>
+
+  <script type="module">
+    const app = document.getElementById('app');
+
+    async function mountConsole() {
+      app.innerHTML = '<div class="loader"><div>Loading Enterprise Console…</div></div>';
+
+      const sourceUrl = `./ui/console.jsx?ts=${Date.now()}`;
+      const source = await fetch(sourceUrl, { cache: 'reload' }).then((res) => {
+        if (!res.ok) throw new Error(`Unable to load console source: ${res.status}`);
+        return res.text();
+      });
+      const transformed = Babel.transform(source, {
+        presets: [['react', { runtime: 'automatic' }]],
+        plugins: [],
+      }).code;
+
+      const dataUrl = `data:text/javascript;charset=utf-8,${encodeURIComponent(transformed)}`;
+      const mod = await import(dataUrl + `#${Date.now()}`);
+      const React = await import('react');
+      const { createRoot } = await import('react-dom/client');
+      const root = createRoot(app);
+      root.render(React.createElement(mod.default));
+    }
+
+    window.addEventListener('DOMContentLoaded', () => mountConsole().catch((err) => {
+      app.innerHTML = `<div class="loader"><div>Console boot failed</div><pre>${String(err).slice(0, 200)}</pre></div>`;
+      console.error(err);
+    }));
+  </script>
+</body>
+</html>

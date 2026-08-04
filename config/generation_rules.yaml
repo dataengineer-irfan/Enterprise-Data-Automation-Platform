@@ -1,0 +1,318 @@
+# ==========================================================
+# Enterprise Synthetic Data Generation Rules
+# Healthcare Provider Module
+# ==========================================================
+# Rebuilt against verified DDL (DDL_Tables.zip / DDLS.zip)
+# and real FK/PK constraints from SIT export. Column keys
+# below match actual physical column names - no more
+# generic placeholders (B_ALT_ID_TY_CD, TAXONOMY_CODE, etc.)
+# ==========================================================
+
+global:
+  locale: en_US
+  default_rows: 1000
+  random_seed: 12345
+  schema: provider
+
+columns:
+
+  # --------------------------------------------------------
+  # Provider Internal System Identifier
+  # This IS the Medicaid Provider ID - p_sys_id is the real,
+  # system-generated identifier. There is no separate
+  # "Medicaid Provider ID" column on p_dtl_tb - resolves the
+  # original MEDICAID_PROVIDER_ID placeholder below.
+  # Table: p_dtl_tb / all child tables (PK / composite PK)
+  # --------------------------------------------------------
+  p_sys_id:
+    generator: sequence
+    start: 900001
+    increment: 1
+    description: "Provider Internal System Identifier - functions as the Medicaid Provider ID. Primary key on p_dtl_tb, first part of composite PK on every child table."
+
+  # --------------------------------------------------------
+  # NPI (National Provider Identifier)
+  # Stored as a row in p_alt_id_tb, NOT a column on p_dtl_tb.
+  # Table: p_alt_id_tb.p_alt_id where p_alt_id_ty_cd = 'XX'
+  # --------------------------------------------------------
+  p_alt_id_npi:
+    generator: regex
+    pattern: "[0-9]{10}"
+    description: "NPI value stored in p_alt_id_tb.p_alt_id when p_alt_id_ty_cd = 'XX' (X12/HIPAA qualifier for NPI, confirmed via real production report queries - NOT the literal string 'NPI'). 10 numeric digits."
+    applies_to:
+      table: p_alt_id_tb
+      column: p_alt_id
+      condition: "p_alt_id_ty_cd = 'XX'"
+
+  # --------------------------------------------------------
+  # Alternate Identifier Type Code
+  # Domain-driven - validate against R_VV_TB where
+  # R_VV_DOMAIN_NAM resolves to the P_ALT_ID_TY_CD_VV alias
+  # (see mmis_schema_provider.csv domain_alias rows).
+  # Table: p_alt_id_tb.p_alt_id_ty_cd
+  # --------------------------------------------------------
+  p_alt_id_ty_cd:
+    generator: choice
+    values:
+      - "XX"     # NPI - X12/HIPAA qualifier code, CONFIRMED via real production report queries (provider_report_queries_reference.sql). NOT the literal string "NPI".
+      - "SY"     # SSN/TIN - CONFIRMED via real production report queries (provider_report_queries_reference.sql).
+      - "DEA"
+      - "MCR"    # Medicare legacy number
+      - "ND"     # State-specific alternate ID
+    description: "Alternate Provider Identifier Type Code - validates against R_VV_TB domain P_ALT_ID_TY_CD_VV. XX and SY are verified real codes; DEA/MCR/ND remain plausible guesses pending further confirmation."
+
+  # --------------------------------------------------------
+  # State-Specific Alternate Provider Identifier
+  # (this was the original B_ALT_ID_TY_CD rule - renamed to
+  # its real column and scoped to when type = 'ND')
+  # Table: p_alt_id_tb.p_alt_id where p_alt_id_ty_cd = 'ND'
+  # --------------------------------------------------------
+  p_alt_id_state_specific:
+    generator: regex
+    pattern: "ND[0-9]{6}"
+    description: "State-specific alternate provider identifier"
+    applies_to:
+      table: p_alt_id_tb
+      column: p_alt_id
+      condition: "p_alt_id_ty_cd = 'ND'"
+
+  # --------------------------------------------------------
+  # DEA Number
+  # Also stored via p_alt_id_tb, type = 'DEA'. Standard DEA
+  # format: 2 letters + 7 digits.
+  # --------------------------------------------------------
+  p_alt_id_dea:
+    generator: regex
+    pattern: "[A-Z]{2}[0-9]{7}"
+    description: "DEA registration number, stored in p_alt_id_tb.p_alt_id when p_alt_id_ty_cd = 'DEA'."
+    applies_to:
+      table: p_alt_id_tb
+      column: p_alt_id
+      condition: "p_alt_id_ty_cd = 'DEA'"
+
+  # --------------------------------------------------------
+  # SSN/TIN stored as an Alternate ID
+  # CONFIRMED via real production report (QA-015): type code
+  # 'SY' is used to retrieve the TIN/SSN value.
+  # Table: p_alt_id_tb.p_alt_id where p_alt_id_ty_cd = 'SY'
+  # --------------------------------------------------------
+  p_alt_id_ssn_tin:
+    generator: regex
+    pattern: "[0-9]{9}"
+    description: "SSN/TIN value stored in p_alt_id_tb.p_alt_id when p_alt_id_ty_cd = 'SY'. Confirmed real code via production queries. Treat as sensitive/PII even in synthetic form."
+    sensitive: true
+    applies_to:
+      table: p_alt_id_tb
+      column: p_alt_id
+      condition: "p_alt_id_ty_cd = 'SY'"
+
+  # --------------------------------------------------------
+  # Taxonomy Code
+  # Consolidated - the original file had two duplicate rules
+  # (TAXONOMY_CODE and P_TAXONOMY_CD) for the same real column.
+  # Table: p_txnmy_tb.p_txnmy_cd
+  # --------------------------------------------------------
+  p_txnmy_cd:
+    generator: choice
+    values:
+      - "282N00000X"
+      - "207Q00000X"
+      - "207R00000X"
+      - "207RC0000X"
+      - "208D00000X"
+      - "2084N0400X"
+      - "261QP2300X"
+      - "261QR1300X"
+    description: "Valid Healthcare Provider Taxonomy Codes (NUCC), validated against SYSTEM_LISTTB (R_LIST_HDR_TB/R_LIST_DTL_TB)."
+
+  # --------------------------------------------------------
+  # License/Certification Number
+  # Resolves the original LICENSE_NUMBER placeholder.
+  # Table: p_lic_cert_tb.p_lic_cert_num
+  # Format inferred from worked example in
+  # handwritten_QA_examples.sql (QA-011): STATE-TYPE-NUMBER
+  # --------------------------------------------------------
+  p_lic_cert_num:
+    generator: regex
+    pattern: "[A-Z]{2}-[A-Z]{2}-[0-9]{5}"
+    description: "State-issued license/certification number, e.g. TX-MD-88213. Verify exact format with your licensing business team - this is inferred from example data, not a confirmed business rule."
+    status: inferred
+
+  # --------------------------------------------------------
+  # License/Certification State Code
+  # Table: p_lic_cert_tb.p_lic_cert_state_cd
+  # --------------------------------------------------------
+  p_lic_cert_state_cd:
+    generator: choice
+    values: ["TX","CA","NY","FL","IL","PA","OH","GA","NC","MI"]
+    description: "Standard 2-character US state abbreviation for the issuing state."
+
+  # --------------------------------------------------------
+  # Owner Tax ID (Federal EIN or SSN, depending on owner type)
+  # Resolves the original TAX_ID / EIN placeholders.
+  # Table: p_owner_dtl_tb.p_owner_tax_id
+  # --------------------------------------------------------
+  p_owner_tax_id:
+    generator: regex
+    pattern: "[0-9]{9}"
+    description: "Owner's federal tax ID (EIN) or SSN depending on p_owner_ty_cd. Stored as BIGINT in DDL - generate as 9 numeric digits."
+
+  # --------------------------------------------------------
+  # Owner SSN
+  # Table: p_owner_dtl_tb.p_owner_ssn_num
+  # --------------------------------------------------------
+  p_owner_ssn_num:
+    generator: regex
+    pattern: "[0-9]{9}"
+    description: "Owner's Social Security Number - 9 digits, stored as VARCHAR(9). Treat as sensitive/PII even in synthetic form."
+    sensitive: true
+
+  # --------------------------------------------------------
+  # CLIA Number
+  # Resolves the original CLIA_NUMBER placeholder.
+  # Table: p_clia_lab_tb.p_clia_num
+  # --------------------------------------------------------
+  p_clia_num:
+    generator: regex
+    pattern: "[0-9]{2}D[0-9]{7}"
+    description: "CLIA laboratory certification number, standard format: 2-digit state code + 'D' + 7 digits."
+
+  # --------------------------------------------------------
+  # CLIA Lab Federal Tax ID
+  # Table: p_clia_lab_tb.p_clia_fed_tax_id
+  # --------------------------------------------------------
+  p_clia_fed_tax_id:
+    generator: regex
+    pattern: "[0-9]{9}"
+    description: "Federal tax ID for the CLIA-certified lab, stored as VARCHAR(9)."
+
+  # --------------------------------------------------------
+  # Provider Type Code
+  # Resolves the original PROVIDER_TYPE placeholder.
+  # Table: p_ty_tb.p_ty_cd
+  # --------------------------------------------------------
+  p_ty_cd:
+    generator: choice
+    values: ["01","02","03","04","05"]
+    description: "Provider Type Code - State's classification of providers. Validates against R_VV_TB domain P_TY_CD_VV. Actual code list should be pulled from real R_VV_TB data once available."
+    status: placeholder_values
+
+  # --------------------------------------------------------
+  # Specialty Code
+  # Resolves the original SPECIALTY_CODE placeholder.
+  # Table: p_specl_tb.p_specl_cd
+  # --------------------------------------------------------
+  p_specl_cd:
+    generator: choice
+    values: ["011","012","021","031","041"]
+    description: "Provider's certified medical specialty code. Validates against R_VV_TB domain P_SPECL_CD_VV. Actual code list should be pulled from real R_VV_TB data once available."
+    status: placeholder_values
+
+  # --------------------------------------------------------
+  # Language Code
+  # Resolves the original LANGUAGE_CODE placeholder.
+  # Table: p_lang_tb.p_lang_cd
+  # --------------------------------------------------------
+  p_lang_cd:
+    generator: choice
+    values: ["EN","ES","ZH","VI","FR","DE","KO","AR"]
+    description: "Provider or provider-staff language code, 2-character ISO-style code. Validates against R_VV_TB domain P_LANG_CD_VV."
+
+  # --------------------------------------------------------
+  # County Code
+  # Resolves the original COUNTY_CODE placeholder.
+  # Table: p_prov_cnty_tn.g_cnty_cd
+  # --------------------------------------------------------
+  g_cnty_cd:
+    generator: regex
+    pattern: "[0-9]{5}"
+    description: "County code (likely FIPS-style), stored as VARCHAR(5) on p_prov_cnty_tn. Note: this is NOT the same as an address ZIP code - see p_zip_cd note below."
+
+  # --------------------------------------------------------
+  # ZIP Code
+  # OUT OF SCOPE - no address table exists in this schema.
+  # Resolves the original ZIP_CODE placeholder by flagging
+  # it as not applicable rather than guessing a column.
+  # --------------------------------------------------------
+  p_zip_cd:
+    generator: not_applicable
+    status: out_of_scope
+    description: "No address/ZIP column exists anywhere in the Provider DDL set. Address data lives in the external Contact Management module (see p_dtl_tb.g_cmn_enty_sk). Do not generate synthetic ZIP data against this schema - see scenario_library.json SCN-007."
+
+  # --------------------------------------------------------
+  # Medicare Provider Number
+  # Resolves the original MEDICARE_PROVIDER_NUMBER placeholder.
+  # Table: p_mcare_tb.p_mcare_alt_id
+  # --------------------------------------------------------
+  p_mcare_alt_id:
+    generator: regex
+    pattern: "[0-9]{6}[A-Z]{0,2}"
+    description: "Medicare provider alternate identifier, stored as VARCHAR(15) on p_mcare_tb."
+
+  p_mcare_part_cd:
+    generator: choice
+    values: ["A","B","AB"]
+    description: "Medicare Part participation code (Part A, Part B, or both) on p_mcare_tb."
+
+  # --------------------------------------------------------
+  # Facility Type Code
+  # Resolves the original HOSPITAL_ID / FACILITY_ID placeholders.
+  # There is no separate hospital/facility ID column - facility
+  # identity IS p_sys_id (a facility is just a provider with
+  # p_indiv_grp_cd = 'O' or similar plus a p_faci_tb row).
+  # Table: p_faci_tb.p_faci_ty_cd
+  # --------------------------------------------------------
+  p_faci_ty_cd:
+    generator: choice
+    values: ["01","02","03","04"]
+    description: "Facility type code on p_faci_tb, keyed by the same p_sys_id as the parent provider - not a separate hospital/facility ID. Validates against R_VV_TB domain P_FACI_TY_CD_VV."
+
+  # --------------------------------------------------------
+  # Network Participation Status
+  # Resolves the original NETWORK_ID placeholder. There is no
+  # separate "network ID" column - network participation is
+  # tracked per-provider via p_nw_part_tb, keyed by p_sys_id.
+  # Table: p_nw_part_tb.p_nw_stat_cd
+  # --------------------------------------------------------
+  p_nw_stat_cd:
+    generator: choice
+    values: ["AC","IN","PN"]
+    description: "Network participation status code on p_nw_part_tb (Active/Inactive/Pending). No separate network identifier exists - participation is scoped to p_sys_id + p_nw_part_sk."
+
+# ==========================================================
+# Resolved TODOs (from original file)
+# ==========================================================
+# MEDICAID_PROVIDER_ID -> resolved as p_sys_id (no separate column exists)
+# LICENSE_NUMBER       -> resolved as p_lic_cert_tb.p_lic_cert_num (status: inferred, verify format)
+#
+# Remaining items still needing real R_VV_TB data before
+# their choice lists can be called verified rather than
+# placeholder_values: p_ty_cd, p_specl_cd
+# ==========================================================
+
+# ==========================================================
+# Future Rules - still not yet mapped to a real column
+# ==========================================================
+#
+# SSN               -> mapped above as p_owner_ssn_num (owner-level, not provider-level)
+# EIN / TAX_ID      -> mapped above as p_owner_tax_id
+# DEA_NUMBER        -> mapped above as p_alt_id_dea
+# NPI               -> mapped above as p_alt_id_npi
+# PROVIDER_TYPE     -> mapped above as p_ty_cd
+# SPECIALTY_CODE    -> mapped above as p_specl_cd
+# LANGUAGE_CODE     -> mapped above as p_lang_cd
+# COUNTY_CODE       -> mapped above as g_cnty_cd
+# ZIP_CODE          -> out of scope, see p_zip_cd note above
+# MEDICARE_PROVIDER_NUMBER -> mapped above as p_mcare_alt_id
+# HOSPITAL_ID / FACILITY_ID -> no separate ID exists, see p_faci_ty_cd note
+# NETWORK_ID        -> no separate ID exists, see p_nw_stat_cd note
+#
+# Still genuinely unmapped (no matching table/column found
+# in the 109-table DDL export - flag to data team):
+#   - none remaining from the original list
+#
+# Continue adding new business-specific generation rules as
+# additional Provider columns are analyzed. Add them here
+# instead of hardcoding logic into Python so the generator
+# remains configuration-driven.
+# ==========================================================

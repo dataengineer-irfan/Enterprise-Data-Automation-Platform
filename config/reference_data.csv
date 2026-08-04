@@ -1,0 +1,11 @@
+code_id,category,code,description,active
+REF-001,Provider Status,ACT,Active,true
+REF-002,Provider Status,INA,Inactive,true
+REF-003,Provider Status,PEN,Pending Enrollment,true
+REF-004,Provider Status,TRM,Terminated,true
+REF-005,Provider Status,SUS,Suspended,true
+REF-006,Provider Status,REV,Revalidation Required,true
+REF-007,Provider Type,IND,Individual Provider,true
+REF-008,Provider Type,ORG,Organizational Provider,true
+REF-009,Enrollment Type,FFS,Fee-for-Service,true
+REF-010,Enrollment Type,MCO,Managed Care Organization,true

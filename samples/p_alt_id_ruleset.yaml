@@ -1,0 +1,8 @@
+policy_name: provider_ssn_v1
+rules:
+  - column: p_alt_id
+    strategy: format_preserving
+    salt: dev-salt-001
+  - column: p_sys_id
+    strategy: deterministic
+    salt: dev-salt-parent
