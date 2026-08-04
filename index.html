@@ -69,6 +69,7 @@
       const mod = await import(dataUrl + `#${Date.now()}`);
       const React = await import('react');
       const { createRoot } = await import('react-dom/client');
+      app.className = '';
       const root = createRoot(app);
       root.render(React.createElement(mod.default));
     }

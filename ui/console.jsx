@@ -782,11 +782,13 @@ function useTokens(theme) {
    UNIFIED SCREEN CONTAINER (S) — Standardized padding, full width, zero gutters
    ========================================================================= */
 function S({ children, pad = true, style = {} }) {
+  // Uses canvas-inner class: width:100%, block layout, proven full-width approach
   return (
-    <div style={{ flex: 1, width: "100%", height: "100%", overflowY: "auto", background: "var(--bg-canvas)", color: "var(--text)", padding: pad ? "20px 24px 48px" : 0, boxSizing: "border-box", ...style }}>
-      <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "16px" }}>
-        {children}
-      </div>
+    <div
+      className="canvas-inner"
+      style={pad ? { ...style } : { padding: 0, ...style }}
+    >
+      {children}
     </div>
   );
 }
@@ -2614,12 +2616,42 @@ export default function EnterpriseConsole() {
   const [qaOpen, setQaOpen] = useState(false);
   const [wsSwitchOpen, setWsSwitchOpen] = useState(false);
   const [authToken, setAuthToken] = useState(null);
-  const [authUser, setAuthUser] = useState(null);
+  const [authUser, setAuthUser] = useState({ username: "operator", display_name: "Robin Operator", role: "operator" });
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [authError, setAuthError] = useState(null);
+  const [apiBaseDraft, setApiBaseDraft] = useState(DEFAULT_API_BASE);
   const [wsInfo, setWsInfo] = useState(null);
 
   const apiBase = DEFAULT_API_BASE;
   const apiStatus = useApiHealth(apiBase);
   const t = useTokens(theme);
+
+  const login = (username, password) => {
+    setLoginBusy(true);
+    setAuthError(null);
+    fetch(`${apiBase}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: "Login failed" }));
+          throw new Error(err.detail || "Authentication failed");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setAuthToken(data.token);
+        setAuthUser(data.user || { username, display_name: username, role: "operator" });
+      })
+      .catch((err) => {
+        setAuthError(err.message);
+      })
+      .finally(() => {
+        setLoginBusy(false);
+      });
+  };
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -2639,6 +2671,22 @@ export default function EnterpriseConsole() {
 
   const pendingApprovalCount = 8;
   const feedActivity = () => {};
+
+  // ── Show LoginGate if backend is live and user isn't logged in with a live token ──────────────────────
+  if (apiStatus === "live" && !authToken) {
+    return (
+      <LoginGate
+        apiBase={apiBase}
+        apiStatus={apiStatus}
+        loginBusy={loginBusy}
+        authError={authError}
+        login={login}
+        setApiBaseDraft={setApiBaseDraft}
+        apiBaseDraft={apiBaseDraft}
+        setSettingsOpen={() => {}}
+      />
+    );
+  }
 
   return (
     <div className="app">
@@ -2871,14 +2919,14 @@ export default function EnterpriseConsole() {
   .user-chip .r{font-size:10px;color:var(--text-faint);}
 
   /* CANVAS — Header → Platform Capabilities → Quick Start, centered, minimal scroll */
-  .canvas{flex:1;overflow:hidden;background:var(--bg-canvas);color:var(--text);display:flex;flex-direction:column;}
-  .canvas-inner{width:100%;padding:20px 24px 48px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box;}
+  .canvas{flex:1;overflow-y:auto;background:var(--bg-canvas);color:var(--text);}
+  .canvas-inner{width:100%;padding:20px 24px 48px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box;}
 
   .section-head{margin-bottom:12px;}
   .section-head h2{font-size:14px;font-weight:700;color:var(--navy);margin:0 0 3px;letter-spacing:.01em;}
   .section-head .d{font-size:12px;color:var(--text-faint);}
 
-  .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);
+  .card{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);
     overflow:hidden;transition:box-shadow .15s ease, transform .15s ease;}
   .card-pad{padding:18px 20px;}
 
