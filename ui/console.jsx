@@ -742,9 +742,12 @@ function maskDeterministic(value) {
 
 const MASKING_STRATEGIES = {
   DETERMINISTIC: { label: "Deterministic", color: "teal", note: "HMAC-SHA256 · stable across runs" },
+  FORMAT_PRESERVING: { label: "Format-preserving (FPE)", color: "amber", note: "Preserves length, casing & punctuation" },
   SYNTHETIC: { label: "Synthetic", color: "violet", note: "Faker-generated, seeded" },
-  FORMAT_PRESERVING: { label: "Format-preserving", color: "amber", note: "keeps digit/letter shape" },
-  NULLIFY: { label: "Nullify", color: "rose", note: "removed entirely" },
+  RANDOM: { label: "Random", color: "blue", note: "Dynamic per call" },
+  STATIC: { label: "Static", color: "slate", note: "Fixed replacement value" },
+  SHUFFLE: { label: "Shuffle", color: "emerald", note: "In-place character permutation" },
+  NULLIFY: { label: "Nullify", color: "rose", note: "Removed / set to NULL" },
 };
 
 const AGENT_ROSTER = [
@@ -2065,13 +2068,27 @@ function SqlEditorScreen({ t, apiBase, apiStatus, apiToken, selectedTable, setSe
         setQueryResult({ rowCount: resp.row_count || 0, executionMs: 0, columns: [], rows: [] });
       } else {
         await new Promise((r) => setTimeout(r, 600));
-        const mockSql = `-- ${operation} preview for ${selectedTable || "p_alt_id_tb"}
-` +
-          `${operation} INTO ${selectedTable || "p_alt_id_tb"} (p_sys_id, p_alt_id, p_alt_id_ty_cd)
-` +
-          `VALUES (10001, '***-**-4821', 'SY'),
-       (10002, '***-**-9920', 'SY'),
-       (10003, '***-**-4412', 'SY');`;
+        const mockTbl = selectedTable || "p_alt_id_tb";
+        let mockSql = "";
+        if (operation === "UPDATE") {
+          mockSql = `-- UPDATE preview for ${mockTbl}
+UPDATE provider.${mockTbl} SET p_alt_id = '982-14-9021', p_alt_id_ty_cd = 'SY' WHERE p_sys_id = 'SYS-1001';
+UPDATE provider.${mockTbl} SET p_alt_id = '771-40-1192', p_alt_id_ty_cd = 'SY' WHERE p_sys_id = 'SYS-1002';`;
+        } else if (operation === "MERGE" || operation === "UPSERT") {
+          mockSql = `-- UPSERT preview for ${mockTbl}
+INSERT INTO provider.${mockTbl} (p_sys_id, p_alt_id, p_alt_id_ty_cd) VALUES ('SYS-1001', '982-14-9021', 'SY') ON CONFLICT (p_sys_id) DO UPDATE SET p_alt_id = EXCLUDED.p_alt_id;
+INSERT INTO provider.${mockTbl} (p_sys_id, p_alt_id, p_alt_id_ty_cd) VALUES ('SYS-1002', '771-40-1192', 'SY') ON CONFLICT (p_sys_id) DO UPDATE SET p_alt_id = EXCLUDED.p_alt_id;`;
+        } else if (operation === "DELETE") {
+          mockSql = `-- DELETE preview for ${mockTbl}
+DELETE FROM provider.${mockTbl} WHERE p_sys_id = 'SYS-1001';
+DELETE FROM provider.${mockTbl} WHERE p_sys_id = 'SYS-1002';`;
+        } else {
+          mockSql = `-- INSERT preview for ${mockTbl}
+INSERT INTO provider.${mockTbl} (p_sys_id, p_alt_id, p_alt_id_ty_cd)
+VALUES ('SYS-1001', '982-14-9021', 'SY'),
+       ('SYS-1002', '771-40-1192', 'SY'),
+       ('SYS-1003', '441-20-3391', 'SY');`;
+        }
         setScript(mockSql);
         setQueryResult({ rowCount: 3, executionMs: 14, columns: ["p_sys_id", "p_alt_id", "p_alt_id_ty_cd"], rows: [[10001, "***-**-4821", "SY"], [10002, "***-**-9920", "SY"], [10003, "***-**-4412", "SY"]] });
       }
@@ -2226,22 +2243,111 @@ function DBAConsole({ t, apiBase, apiStatus, apiToken, myRole }) {
 }
 
 function AgentConsole({ t, feedActivity, apiBase, apiStatus, apiToken, myRole }) {
+  const live = apiStatus === "live";
+  const [prompt, setPrompt] = useState("Generate 20 rows for p_dtl_tb and p_alt_id_tb with format-preserving masking");
+  const [running, setRunning] = useState(false);
+  const [planResult, setPlanResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const runFanOutPlan = async () => {
+    setRunning(true);
+    setError(null);
+    try {
+      if (live && apiToken) {
+        const res = await apiPost(apiBase, "/api/agent/plan", { nl_request: prompt }, apiToken);
+        setPlanResult(res);
+      } else {
+        await new Promise((r) => setTimeout(r, 700));
+        setPlanResult({
+          plan_id: "plan-fanout-" + Math.floor(Math.random() * 9000 + 1000),
+          user_intent: prompt,
+          status: "awaiting_confirmation",
+          tasks: [
+            { assigned_agent: "schema_metadata_agent", intent: "Introspect p_dtl_tb and p_alt_id_tb foreign keys", status: "completed" },
+            { assigned_agent: "masking_agent", intent: "Propose FPE masking rules on SSN & Tax ID columns", status: "completed" },
+            { assigned_agent: "sql_generation_agent", intent: "Build dependency-ordered INSERT statements", status: "completed" },
+            { assigned_agent: "validation_agent", intent: "Verify referential integrity across 20 synthetic rows", status: "completed" },
+          ],
+          sql: "-- Multi-agent fan-out generated script\nINSERT INTO provider.p_dtl_tb (p_sys_id) VALUES (1001);\nINSERT INTO provider.p_alt_id_tb (p_sys_id, p_alt_id) VALUES (1001, '491-82-9011');",
+        });
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setRunning(false);
+    }
+  };
+
   return (
     <S pad={true}>
       <PageHeader
         icon={Bot}
         title="Subagent Orchestration & AI Console"
-        description="Interact with specialized subagents for automated schema analysis and masking policy creation"
+        description="Interact with specialized subagents for automated schema analysis, FPE masking, and SQL script creation"
         breadcrumbs="PLATFORM / AI AGENT"
       />
+
+      <ECard title="Multi-Agent Fan-Out Orchestration" subtitle="Generate multi-table execution plans using AI agent swarm">
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div>
+            <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-tertiary)", display: "block", marginBottom: "6px" }}>NATURAL LANGUAGE INSTRUCTION / PROMPT</label>
+            <input
+              type="text"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="ws-switch-btn"
+              style={{ width: "100%", padding: "8px 12px", fontSize: "13px" }}
+              placeholder="e.g. Generate 50 rows for p_dtl_tb with FPE masking"
+            />
+          </div>
+          <div>
+            <button className="btn btn-primary btn-sm" onClick={runFanOutPlan} disabled={running}>
+              {running ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+              Run Fan-Out Plan
+            </button>
+          </div>
+          {error && (
+            <div style={{ padding: "8px 12px", borderRadius: "6px", background: "var(--danger-bg, #3a121d)", color: "var(--danger-color)", fontSize: "12px" }}>
+              <AlertTriangle className="h-4 w-4 inline mr-1" />{error}
+            </div>
+          )}
+          {planResult && (
+            <div style={{ marginTop: "10px", padding: "14px", borderRadius: "var(--radius-sm)", background: "var(--bg-inset)", border: "1px solid var(--border-default)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <span style={{ fontWeight: 700, fontSize: "13px" }}>Plan ID: {planResult.plan_id}</span>
+                <span className="status-chip success">{planResult.status}</span>
+              </div>
+              <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "10px" }}>{planResult.user_intent}</div>
+              <div style={{ fontWeight: "700", fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", marginBottom: "6px" }}>Subagent Tasks Executed</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
+                {(planResult.tasks || []).map((t, idx) => (
+                  <div key={idx} style={{ fontSize: "12px", display: "flex", gap: "8px", alignItems: "center" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent)" }}>[{t.assigned_agent}]</span>
+                    <span>{t.intent}</span>
+                    <span className="status-chip success" style={{ marginLeft: "auto" }}>{t.status}</span>
+                  </div>
+                ))}
+              </div>
+              {planResult.sql && (
+                <div>
+                  <div style={{ fontWeight: "700", fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", marginBottom: "4px" }}>Generated Script</div>
+                  <pre style={{ margin: 0, padding: "10px", borderRadius: "6px", background: "var(--bg)", border: "1px solid var(--border)", fontSize: "11.5px", fontFamily: "var(--font-mono)", overflowX: "auto" }}>{planResult.sql}</pre>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </ECard>
 
       <ECard title="Subagent Fleet" subtitle="Active platform agents">
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {[
             { name: "manager-agent", role: "Orchestration & Planning" },
-            { name: "schema_metadata_agent", role: "Introspection" },
-            { name: "masking_agent", role: "Policy Generation" },
-            { name: "validation_agent", role: "Constraint Verification" },
+            { name: "schema_metadata_agent", role: "Introspection & FK Graph" },
+            { name: "masking_agent", role: "Policy & FPE Strategy Generation" },
+            { name: "sql_generation_agent", role: "INSERT / UPDATE / UPSERT / DELETE SQL Builder" },
+            { name: "validation_agent", role: "Constraint & Integrity Verification" },
+            { name: "execution_report_agent", role: "Write Execution & Report Summaries" },
           ].map((ag) => (
             <div key={ag.name} style={{ padding: "10px", borderRadius: "var(--radius-sm)", background: "var(--surface-inset)", border: "1px solid var(--border-default)" }}>
               <div style={{ fontWeight: "700", fontFamily: "var(--font-mono)", fontSize: "12px" }}>{ag.name}</div>
@@ -2255,8 +2361,8 @@ function AgentConsole({ t, feedActivity, apiBase, apiStatus, apiToken, myRole })
       <ECard title="AI Recommendations & Activity Feed" subtitle="Real-time agent suggestions">
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           <div style={{ padding: "14px", borderRadius: "var(--radius-md)", background: "var(--agent-tint)", border: "1px solid var(--agent-color)", color: "var(--text-primary)" }}>
-            <div style={{ fontWeight: "700", marginBottom: "4px", color: "var(--agent-color)" }}>🤖 Recommendation: Mask Alternate SSN Columns</div>
-            <div style={{ fontSize: "12.5px" }}>The masking_agent detected unmasked SSN columns in table p_alt_id_tb. High priority policy proposed.</div>
+            <div style={{ fontWeight: "700", marginBottom: "4px", color: "var(--agent-color)" }}>🤖 Recommendation: Apply Format-Preserving Encryption (FPE)</div>
+            <div style={{ fontSize: "12.5px" }}>The masking_agent detected unmasked SSN and Tax ID columns in table p_alt_id_tb. High priority FPE policy proposed to preserve string length and punctuation.</div>
           </div>
         </div>
       </ECard>
