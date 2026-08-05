@@ -740,6 +740,32 @@ function maskDeterministic(value) {
   return h.toString(16).padStart(8, "0") + "…" + (h * 7 % 99999999).toString(16);
 }
 
+
+const MOCK_DBA_TABLES = [
+  { table: "p_alt_id_tb", rows: 142050, sensitiveCols: 4, status: "Protected", masked: true, lastMasked: "2 mins ago" },
+  { table: "p_dtl_tb", rows: 98400, sensitiveCols: 2, status: "Protected", masked: true, lastMasked: "14 mins ago" },
+  { table: "p_affl_tb", rows: 65120, sensitiveCols: 1, status: "Unmasked", masked: false, lastMasked: "Never" },
+  { table: "p_owner_tb", rows: 43200, sensitiveCols: 3, status: "Unmasked", masked: false, lastMasked: "Never" },
+  { table: "p_lic_cert_tb", rows: 31080, sensitiveCols: 2, status: "Protected", masked: true, lastMasked: "1 hour ago" },
+  { table: "p_taxonomy_tb", rows: 18450, sensitiveCols: 0, status: "Protected", masked: true, lastMasked: "3 hours ago" },
+];
+
+const MOCK_JOBS = [
+  { id: "job-8912-gen", name: "Synthetic Row Generation — p_alt_id_tb", status: "completed", worker: "data_generator", duration: "1m 12s", progress: 100 },
+  { id: "job-8911-disc", name: "Live Metadata Introspection & FK Graph", status: "completed", worker: "schema_metadata_agent", duration: "48s", progress: 100 },
+  { id: "job-8910-mask", name: "FPE Masking Rule Enforcement", status: "completed", worker: "masking_agent", duration: "24s", progress: 100 },
+  { id: "job-8909-val", name: "Referential Integrity Validation Check", status: "completed", worker: "validation_agent", duration: "32s", progress: 100 },
+  { id: "job-8908-sync", name: "Target Database Batch Load", status: "running", worker: "execution_report_agent", duration: "1m 45s", progress: 65 },
+];
+
+const MOCK_AUDIT_LOGS = [
+  { timestamp: "2026-08-05 19:42:10", actor: "operator", action: "GENERATE_SYNTHETIC_DATA", table: "p_alt_id_tb", status: "success", details: "Generated 20 rows with FPE masking" },
+  { timestamp: "2026-08-05 19:28:44", actor: "admin", action: "DISCOVER_METADATA_SNAPSHOT", table: "provider_schema", status: "success", details: "Introspected 109 tables and 44 foreign keys" },
+  { timestamp: "2026-08-05 19:14:02", actor: "operator", action: "PROPOSE_MASKING_POLICY", table: "p_dtl_tb", status: "success", details: "Applied Format-Preserving Encryption on Tax ID" },
+  { timestamp: "2026-08-05 18:59:15", actor: "admin", action: "CREATE_WORKSPACE", table: "sit-to-dev-migration", status: "success", details: "Created workspace connecting SIT to DEV" },
+  { timestamp: "2026-08-05 18:30:22", actor: "operator", action: "LOGIN_SUCCESS", table: "auth", status: "success", details: "Authenticated session token issued" },
+];
+
 const MASKING_STRATEGIES = {
   DETERMINISTIC: { label: "Deterministic", color: "teal", note: "HMAC-SHA256 · stable across runs" },
   FORMAT_PRESERVING: { label: "Format-preserving (FPE)", color: "amber", note: "Preserves length, casing & punctuation" },
@@ -2722,7 +2748,7 @@ export default function EnterpriseConsole() {
   const [qaOpen, setQaOpen] = useState(false);
   const [wsSwitchOpen, setWsSwitchOpen] = useState(false);
   const [authToken, setAuthToken] = useState(null);
-  const [authUser, setAuthUser] = useState({ username: "operator", display_name: "Robin Operator", role: "operator" });
+  const [authUser, setAuthUser] = useState(null);
   const [loginBusy, setLoginBusy] = useState(false);
   const [authError, setAuthError] = useState(null);
   const [apiBaseDraft, setApiBaseDraft] = useState(DEFAULT_API_BASE);
@@ -2735,28 +2761,40 @@ export default function EnterpriseConsole() {
   const login = (username, password) => {
     setLoginBusy(true);
     setAuthError(null);
-    fetch(`${apiBase}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: "Login failed" }));
-          throw new Error(err.detail || "Authentication failed");
-        }
-        return res.json();
+    if (apiStatus === "live") {
+      fetch(`${apiBase}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
       })
-      .then((data) => {
-        setAuthToken(data.token);
-        setAuthUser(data.user || { username, display_name: username, role: "operator" });
-      })
-      .catch((err) => {
-        setAuthError(err.message);
-      })
-      .finally(() => {
+        .then(async (res) => {
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: "Login failed" }));
+            throw new Error(err.detail || "Authentication failed");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          setAuthToken(data.token);
+          setAuthUser(data.user || { username, display_name: username, role: username === "admin" ? "admin" : "operator" });
+        })
+        .catch((err) => {
+          setAuthError(err.message);
+        })
+        .finally(() => {
+          setLoginBusy(false);
+        });
+    } else {
+      // Offline / Demo mode sign-in
+      setTimeout(() => {
+        setAuthUser({
+          username: username || "operator",
+          display_name: username === "admin" ? "Dana Admin" : (username || "Robin Operator"),
+          role: username === "admin" ? "admin" : "operator"
+        });
         setLoginBusy(false);
-      });
+      }, 300);
+    }
   };
 
   useEffect(() => {
