@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # 1. Platform FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - AUTH_PROVIDER=local # or keycloak
+      - LLM_PROVIDER=ollama
+      - LLM_BASE_URL=http://ollama:11434/v1
+      - LLM_MODEL=qwen2:7b
+      - DATABASE_URL=postgresql://platform_usr:platform_pw@postgres:5432/platform_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+      - ollama
+
+  # 2. Platform Static/React Web Console
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "8007:80"
+    volumes:
+      - ./:/usr/share/nginx/html:ro
+
+  # 3. Target PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=platform_usr
+      - POSTGRES_PASSWORD=platform_pw
+      - POSTGRES_DB=platform_db
+    ports:
+      - "5432:5432"
+
+  # 4. Keycloak IAM / OpenID Connect Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.1
+    command: start-dev
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "8080:8080"
+
+  # 5. Distributed Redis Shared Plan & Handoff Storage
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # 6. Local Ollama LLM Service
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"

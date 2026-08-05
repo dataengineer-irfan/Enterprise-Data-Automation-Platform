@@ -45,3 +45,24 @@ class SharedStorage:
         if not path.exists():
             raise KeyError(f"No detail found for pointer {pointer!r}")
         return json.loads(path.read_text())
+
+
+class RedisSharedStorage:
+    """Phase 7: Redis-backed shared storage for multi-worker production scale-out."""
+
+    def __init__(self, redis_url: str = "redis://localhost:6379/0", ttl_seconds: int = 86400) -> None:
+        import redis
+        self.client = redis.Redis.from_url(redis_url)
+        self.ttl = ttl_seconds
+
+    def write_detail(self, payload: Any, record_count: int = 0) -> DetailPointer:
+        pointer = f"detail:{uuid.uuid4()}"
+        text = json.dumps(payload, indent=2, default=str)
+        self.client.set(pointer, text, ex=self.ttl)
+        return DetailPointer(pointer=pointer, size_bytes=len(text.encode("utf-8")), record_count=record_count)
+
+    def read_detail(self, pointer: str) -> Any:
+        data = self.client.get(pointer)
+        if data is None:
+            raise KeyError(f"No detail found in Redis for pointer {pointer!r}")
+        return json.loads(data.decode("utf-8"))

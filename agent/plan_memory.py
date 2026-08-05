@@ -121,3 +121,31 @@ class PlanMemory:
             data["status"] = PlanStatus(data["status"])
             plans.append(Plan(**data))
         return plans
+
+
+class RedisPlanMemory:
+    """Phase 7: Redis-backed plan memory for multi-worker production scale-out."""
+
+    def __init__(self, redis_url: str = "redis://localhost:6379/1") -> None:
+        import redis
+        self.client = redis.Redis.from_url(redis_url)
+
+    def save_plan(self, plan: Any) -> None:
+        key = f"plan:{plan.plan_id}"
+        self.client.set(key, json.dumps(plan.to_dict(), indent=2))
+
+    def load_plan(self, plan_id: str) -> dict | None:
+        key = f"plan:{plan_id}"
+        data = self.client.get(key)
+        if not data:
+            return None
+        return json.loads(data.decode("utf-8"))
+
+    def list_plans(self) -> list[dict]:
+        keys = self.client.keys("plan:*")
+        plans = []
+        for k in keys:
+            val = self.client.get(k)
+            if val:
+                plans.append(json.loads(val.decode("utf-8")))
+        return plans
