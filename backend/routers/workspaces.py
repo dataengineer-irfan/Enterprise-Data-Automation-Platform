@@ -92,12 +92,19 @@ def workspace_catalog(workspace_id: str, _user=Depends(with_actor)):
     return catalog
 
 
+class GenerateWorkspaceRequest(BaseModel):
+    table: str = "p_alt_id_tb"
+    row_count: int = 10
+    masking: bool = True
+
+
 @router.post("/{workspace_id}/generate")
-def generate_workspace(workspace_id: str, _user=Depends(require_role(Role.ADMIN))):
+def generate_workspace(workspace_id: str, req: GenerateWorkspaceRequest = None, _user=Depends(require_role(Role.ADMIN))):
     workspace = get_workspace_record(workspace_id)
     if not workspace:
         raise HTTPException(status_code=404, detail="No such workspace")
-    result = generate_workspace_data(workspace_id)
+    payload = req.model_dump() if req else {}
+    result = generate_workspace_data(workspace_id, payload)
     return {
         "status": "completed",
         "workspace_id": workspace_id,

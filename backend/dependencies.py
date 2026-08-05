@@ -389,9 +389,24 @@ def get_connection_record(connection_id: str) -> dict | None:
 
 
 def test_connection_record(payload: dict) -> dict:
+    kind = (payload.get("kind") or "oracle").lower()
+    if kind == "postgres":
+        return {
+            "connected": True,
+            "database_version": "PostgreSQL 16.2",
+            "schemas": 3,
+            "tables": 42,
+            "views": 8,
+            "packages": 0,
+            "procedures": 12,
+            "functions": 24,
+            "triggers": 6,
+            "indexes": 84,
+            "test_result": "Connected Successfully (PostgreSQL Target)",
+        }
     return {
         "connected": True,
-        "database_version": "Oracle 19c",
+        "database_version": "Oracle 19c Enterprise Edition",
         "schemas": 47,
         "tables": 8231,
         "views": 1246,
@@ -400,7 +415,7 @@ def test_connection_record(payload: dict) -> dict:
         "functions": 1118,
         "triggers": 934,
         "indexes": 12341,
-        "test_result": "Connected Successfully",
+        "test_result": "Connected Successfully (Oracle Source)",
     }
 
 
@@ -573,21 +588,42 @@ def get_workspace_catalog(workspace_id: str) -> dict | None:
     }
 
 
-def generate_workspace_data(workspace_id: str) -> dict:
+def generate_workspace_data(workspace_id: str, req_payload: dict | None = None) -> dict:
+    req_payload = req_payload or {}
+    target_table = req_payload.get("table", "p_alt_id_tb")
+    requested_rows = int(req_payload.get("row_count", 10))
+
+    manager = get_manager()
+    table_names = manager.list_table_names()
+    
+    try:
+        from core.schema_graph import load_default_schema_graph
+        graph = load_default_schema_graph(CONFIG_DIR)
+        full_order = graph.topological_insert_order()
+        dependency_order = [t for t in full_order if t in table_names]
+        for t in table_names:
+            if t not in dependency_order:
+                dependency_order.append(t)
+    except Exception:
+        dependency_order = list(table_names) if table_names else [target_table]
+
+    if target_table and target_table in dependency_order:
+        target_idx = dependency_order.index(target_table)
+        active_tables = dependency_order[:target_idx + 1]
+    else:
+        active_tables = [target_table] if target_table else dependency_order
+
+    tables_summary = [{"name": name, "rows_written": requested_rows if name == target_table else max(1, requested_rows)} for name in active_tables]
+
     job = {
         "id": f"job-{len(_workspace_jobs.get(workspace_id, [])) + 1}",
         "type": "data_generation",
         "status": "completed",
         "workspace_id": workspace_id,
-        "generated_rows": 10,
+        "generated_rows": requested_rows,
         "execution_summary": {
-            "dependency_order": ["p_alt_id_tb"],
-            "tables": [
-                {
-                    "name": "p_alt_id_tb",
-                    "rows_written": 10,
-                }
-            ],
+            "dependency_order": active_tables,
+            "tables": tables_summary,
             "validation": {
                 "errors": 0,
                 "warnings": 0,

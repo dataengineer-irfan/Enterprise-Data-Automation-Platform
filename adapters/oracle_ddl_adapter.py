@@ -153,10 +153,12 @@ class OracleDDLAdapter(DatabasePort):
         return warnings
 
     def generate_ddl(self, table: TableMetadata) -> str:
-        raise NotImplementedError(
-            "OracleDDLAdapter is introspection-only in Phase 1; use PostgresAdapter "
-            "to generate target DDL from the converted (already-Postgres-dialect) statements."
+        cols = ",\n    ".join(
+            f"{c.name} {c.data_type.upper()}" + ("" if c.nullable else " NOT NULL")
+            for c in table.columns
         )
+        pk_clause = f",\n    CONSTRAINT {table.name}_PK PRIMARY KEY ({', '.join(table.primary_key)})" if table.primary_key else ""
+        return f"CREATE TABLE {table.schema.upper()}.{table.name.upper()} (\n    {cols}{pk_clause}\n);"
 
     # -- execution (refused by design; see class docstring) -------------------
     def execute(self, sql: str, params: Optional[tuple] = None) -> ExecutionResult:
