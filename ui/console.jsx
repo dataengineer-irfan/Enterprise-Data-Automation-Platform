@@ -1487,7 +1487,18 @@ function SourceTargetConnectionsScreen({ t, apiBase, apiStatus, apiToken }) {
       )}
       <ECard title={`${activeSubTab === "source" ? "Source" : "Target"} Database Parameters`} subtitle="Credentials are securely transmitted to the FastAPI platform engine">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-          <div><label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-faint)" }}>ENGINE</label><input type="text" className="ws-switch-btn" style={{ width: "100%", marginTop: 4 }} value={currentConfig.engine} onChange={e => setConfig("engine", e.target.value)} /></div>
+          <div>
+  <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-faint)" }}>DATABASE ENGINE / ADAPTER</label>
+  <select className="form-select" style={{ width: "100%", marginTop: 4, padding: "8px 10px", fontSize: "13px" }} value={currentConfig.engine} onChange={e => setConfig("engine", e.target.value)}>
+    <option value="PostgreSQL">PostgreSQL (Primary Relational Engine)</option>
+    <option value="Oracle">Oracle 19c / 21c (Thin Mode Driver)</option>
+    <option value="Snowflake">Snowflake Data Cloud (Warehouse)</option>
+    <option value="BigQuery">Google BigQuery (Enterprise Analytics)</option>
+    <option value="Redshift">Amazon Redshift (Data Warehouse)</option>
+    <option value="MySQL">MySQL / MariaDB Enterprise</option>
+    <option value="SQLite">SQLite (Embedded / In-Memory)</option>
+  </select>
+</div>
           <div><label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-faint)" }}>HOST / ENDPOINT</label><input type="text" className="ws-switch-btn" style={{ width: "100%", marginTop: 4 }} value={currentConfig.host} onChange={e => setConfig("host", e.target.value)} /></div>
           <div><label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-faint)" }}>PORT</label><input type="text" className="ws-switch-btn" style={{ width: "100%", marginTop: 4 }} value={currentConfig.port} onChange={e => setConfig("port", e.target.value)} /></div>
           <div><label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-faint)" }}>DATABASE NAME</label><input type="text" className="ws-switch-btn" style={{ width: "100%", marginTop: 4 }} value={currentConfig.database} onChange={e => setConfig("database", e.target.value)} /></div>
@@ -2785,7 +2796,7 @@ export default function EnterpriseConsole() {
           setLoginBusy(false);
         });
     } else {
-      // Offline / Demo mode sign-in
+      // Air-Gapped / Autonomous Mode sign-in
       setTimeout(() => {
         setAuthUser({
           username: username || "operator",
