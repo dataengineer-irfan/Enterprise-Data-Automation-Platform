@@ -1175,8 +1175,8 @@ const NAV_ITEMS = [
    ========================================================================= */
 
 function LoginGate({ apiBase, apiStatus, loginBusy, authError, login, setApiBaseDraft, apiBaseDraft, setSettingsOpen }) {
-  const [username, setUsername] = useState("operator");
-  const [password, setPassword] = useState("operator-dev-pw");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -3251,9 +3251,10 @@ export default function EnterpriseConsole() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
             </button>
 
-            <div className="user-chip">
+            <div className="user-chip" onClick={() => { if (window.confirm("Sign out of Enterprise Console?")) { setAuthUser(null); setAuthToken(null); } }} title="Click to Sign Out">
               <div className="avatar">{authUser?.username ? authUser.username.slice(0, 2).toUpperCase() : "RO"}</div>
               <div><div className="n">{authUser?.display_name || authUser?.username || "Robin Operator"}</div></div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 12, height: 12, color: "var(--text-faint)", marginLeft: 4 }}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             </div>
           </div>
         </div>
