@@ -176,6 +176,42 @@ def cmd_fk_check(args: argparse.Namespace) -> None:
     print("FK-masking consistency check passed: no divergent strategy/salt across FK links.")
 
 
+def cmd_fan_out(args: argparse.Namespace) -> None:
+    from agent.manager import ManagerAgent
+    from agent.plan_memory import PlanMemory
+    from agent.shared_storage import SharedStorage
+    from core.audit import AuditLog
+    from core.llm_provider import load_default_provider
+
+    llm = load_default_provider()
+    storage = SharedStorage(ROOT / "output" / "shared_storage")
+    memory = PlanMemory(ROOT / "output" / "plans")
+    audit = AuditLog(ROOT / "output" / "logs" / "audit.jsonl")
+
+    manager = ManagerAgent(
+        llm=llm,
+        config_dir=CONFIG_DIR,
+        ddl_dir=DDL_DIR,
+        plan_memory=memory,
+        audit_log=audit,
+        shared_storage=storage,
+        actor="cli_fanout",
+    )
+
+    tables = args.tables or ["p_dtl_tb", "p_alt_id_tb"]
+    prompt = args.prompt or f"Generate {args.rows} rows for {', '.join(tables)} with masking"
+    plan = manager.plan_and_orchestrate(prompt, tables=tables, requested_rows=args.rows)
+
+    print(f"Orchestrated plan '{plan.plan_id}' with status: {plan.status.value}")
+    print(f"Goal: {plan.user_intent}")
+    print(f"Sub-tasks: {len(plan.tasks)}")
+    for t in plan.tasks:
+        print(f"  - [{t.assigned_agent}] {t.intent} (status: {t.status.value})")
+    if args.json_out:
+        Path(args.json_out).write_text(json.dumps(plan.to_dict(), indent=2))
+        print(f"Wrote plan JSON to {args.json_out}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Phase 2: Validation + Masking CLI (no agent).")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -202,6 +238,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_fk = sub.add_parser("fk-check", help="Verify FK-linked columns share the same masking strategy/salt.")
     p_fk.add_argument("--manifest", required=True, help="YAML file: {table_name: ruleset_path.yaml}")
     p_fk.set_defaults(func=cmd_fk_check)
+
+    p_fan = sub.add_parser("fan-out", help="Trigger multi-table multi-agent fan-out orchestration plan.")
+    p_fan.add_argument("--prompt", help="Natural language generation prompt")
+    p_fan.add_argument("--tables", nargs="+", help="Space-separated list of target tables")
+    p_fan.add_argument("--rows", type=int, default=10, help="Row count requested per table")
+    p_fan.add_argument("--json-out", help="Save plan output as JSON file")
+    p_fan.set_defaults(func=cmd_fan_out)
 
     return parser
 

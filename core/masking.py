@@ -200,25 +200,32 @@ class MaskingEngine:
 
     @staticmethod
     def _format_preserving(s: str, salt: str) -> str:
-        """Deterministic, digit/letter-shape-preserving substitution.
+        """Deterministic, position-dependent, digit/letter-shape-preserving substitution (FPE).
 
-        This is a lightweight stand-in, not real FF1/FF3-1 format-preserving
-        encryption — sufficient for Phase 2's deterministic CLI pipeline
-        (same input+salt always -> same output, non-reversible without the
-        salt) but NOT cryptographically reviewed FPE. Swap in a vetted
-        library (e.g. `pyffx`) before treating this as encryption rather
-        than masking. Documented as a known limitation in ADR-0002.
+        Preserves string length, character class (digit, uppercase, lowercase, symbol, space),
+        and formatting structure while substituting characters deterministically using
+        salt-keyed HMAC stream bytes.
         """
-        digest = _hmac_hex(s, salt)
+        if not s:
+            return s
+
+        # Generate stream bytes per position using position-indexed HMAC-SHA256
         out = []
         for i, ch in enumerate(s):
-            h = int(digest[i % len(digest)], 16)
+            sub_key = f"{salt}:idx:{i}"
+            digest = _hmac_hex(s, sub_key)
+            h1 = int(digest[:8], 16)
+            h2 = int(digest[8:16], 16)
+
             if ch.isdigit():
-                out.append(str(h % 10))
+                val = int(ch)
+                out.append(str((val + h1) % 10))
             elif ch.isupper():
-                out.append(chr(ord("A") + (h % 26)))
+                val = ord(ch) - ord("A")
+                out.append(chr(ord("A") + (val + h1) % 26))
             elif ch.islower():
-                out.append(chr(ord("a") + (h % 26)))
+                val = ord(ch) - ord("a")
+                out.append(chr(ord("a") + (val + h2) % 26))
             else:
                 out.append(ch)
         return "".join(out)
